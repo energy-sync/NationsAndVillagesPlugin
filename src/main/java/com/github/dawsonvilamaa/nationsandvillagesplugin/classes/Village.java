@@ -3,6 +3,8 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.classes;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.VillagerNotFoundException;
 import org.bukkit.Location;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
 
@@ -10,7 +12,6 @@ public class Village {
     private String name;
     private int id;
     private Nation nation;
-    private Location location;
     private int population;
     private ArrayList<NationsVillager> villagers;
 
@@ -23,7 +24,6 @@ public class Village {
         this.name = name;
         this.id = Main.nationsManager.nextVillageID;
         this.nation = nation;
-        this.location = location;
         this.population = 0;
         this.villagers = new ArrayList<NationsVillager>();
     }
@@ -61,20 +61,6 @@ public class Village {
      */
     public void setNation(Nation newNation) {
         this.nation = newNation;
-    }
-
-    /**
-     * @return location
-     */
-    public Location getLocation() {
-        return this.location;
-    }
-
-    /**
-     * @param newLocation
-     */
-    public void setLocation(Location newLocation) {
-        this.location = newLocation;
     }
 
     /**
@@ -123,5 +109,18 @@ public class Village {
             }
         }
         throw new VillagerNotFoundException();
+    }
+
+    public JSONObject toJSON() {
+        JSONObject jsonVillage = new JSONObject();
+        jsonVillage.put("name", this.name);
+        jsonVillage.put("id", String.valueOf(this.id));
+        jsonVillage.put("nation", String.valueOf(this.nation.getID()));
+        jsonVillage.put("population", String.valueOf(this.population));
+        JSONArray jsonVillagers = new JSONArray();
+        for (NationsVillager villager : this.villagers)
+            jsonVillagers.add(villager.toJSON());
+        jsonVillage.put("villagers", jsonVillagers);
+        return jsonVillage;
     }
 }

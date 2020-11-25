@@ -50,6 +50,12 @@ public class nation implements Command {
                             + "\nVillages: " + infoNation.getVillages().size());
                 }
                 return true;
+
+            case "list":
+                String list = ChatColor.GOLD + "List of nations:" + ChatColor.WHITE;
+                for (Nation nation : Main.nationsManager.getNations()) list += "\n" + nation.getName();
+                player.sendMessage(list);
+                return true;
         }
         return false;
     }

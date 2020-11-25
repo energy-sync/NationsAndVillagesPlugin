@@ -1,6 +1,7 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.classes;
 
 import org.bukkit.entity.Player;
+import org.json.simple.JSONObject;
 
 import java.util.UUID;
 
@@ -16,6 +17,15 @@ public class NationsPlayer {
         this.username = player.getName();
         this.uuid = player.getUniqueId();
         this.money = 1000;
+    }
+
+    /**
+     * @param jsonPlayer
+     */
+    public NationsPlayer(JSONObject jsonPlayer) {
+        this.username = jsonPlayer.get("username").toString();
+        this.uuid = UUID.fromString(jsonPlayer.get("uuid").toString());
+        this.money = Integer.parseInt(jsonPlayer.get("money").toString());
     }
 
     /**
@@ -64,5 +74,13 @@ public class NationsPlayer {
     public int removeMoney(int amount) {
         this.money += amount;
         return this.money;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject jsonNationsPlayer = new JSONObject();
+        jsonNationsPlayer.put("username", this.username);
+        jsonNationsPlayer.put("uuid", this.uuid.toString());
+        jsonNationsPlayer.put("money", String.valueOf(this.money));
+        return jsonNationsPlayer;
     }
 }

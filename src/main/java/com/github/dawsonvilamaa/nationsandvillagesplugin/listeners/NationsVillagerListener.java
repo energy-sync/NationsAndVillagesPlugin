@@ -14,7 +14,7 @@ import java.util.Random;
 
 public class NationsVillagerListener implements Listener {
     private Main plugin;
-    private static String[] playerAttackMessages = {"Hey! Stop hurting me!", "Ow! Stop hurting me!", "Ouch! Stop hurting me!", "Hey! Stop hitting me!", "Ow! Stop hitting me!", "Ouch! Stop hitting me!"};
+    private static String[] playerAttackMessages = {"Hey! Stop hurting me!", "Ow! Stop hurting me!", "Ouch! Stop hurting me!", "Hey! Stop hitting me!", "Ow! Stop hitting me!", "Ouch! Stop hitting me!", "Ow!", "Ouch!"};
     private static String[] zombieAttackMessages = {"Help! A zombie is attacking me!", "Someone help! A zombie is attacking me!", "Help! There's a zombie!", "Someone help! There's a zombie!", "Zombie!"};
     private static Random random = new Random();
 

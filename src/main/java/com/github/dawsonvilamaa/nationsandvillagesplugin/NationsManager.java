@@ -5,7 +5,6 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Village;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.VillageNotFoundException;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -100,6 +99,18 @@ public class NationsManager {
     }
 
     /**
+     * Returns a nation by a searched name, or returns null if it does not exist
+     * @param name
+     * @return nation
+     */
+    public Nation getNationByName(String name) {
+        for (Nation nation : this.nations) {
+            if (nation.getName().toLowerCase().equals(name.toLowerCase())) return nation;
+        }
+        return null;
+    }
+
+    /**
      * Adds a village to the worldwide list
      * @param newVillage
      */
@@ -128,18 +139,6 @@ public class NationsManager {
      */
     public void addPlayer(Player newPlayer) {
         this.players.put(newPlayer.getUniqueId(), new NationsPlayer(newPlayer));
-    }
-
-    /**
-     * Returns a nation by a searched name, or returns null if it does not exist
-     * @param name
-     * @return nation
-     */
-    public Nation getNationByName(String name) {
-        for (Nation nation : this.nations) {
-            if (nation.getName().toLowerCase().equals(name.toLowerCase())) return nation;
-        }
-        return null;
     }
 
     /**

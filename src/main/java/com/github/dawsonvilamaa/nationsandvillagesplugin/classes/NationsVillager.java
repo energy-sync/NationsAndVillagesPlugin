@@ -9,6 +9,7 @@ import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.json.simple.JSONObject;
 
 public class NationsVillager extends EntityVillager {
     private String name;
@@ -116,5 +117,14 @@ public class NationsVillager extends EntityVillager {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (Bukkit.getEntity(getUniqueID()).getLocation().distance(player.getLocation()) <= 30) speakToPlayer(player, message);
         }
+    }
+
+    public JSONObject toJSON() {
+        JSONObject jsonVillager = new JSONObject();
+        jsonVillager.put("name", this.name);
+        jsonVillager.put("id", String.valueOf(this.id));
+        jsonVillager.put("nation", String.valueOf(this.nation.getID()));
+        jsonVillager.put("village", this.village.getID());
+        return jsonVillager;
     }
 }

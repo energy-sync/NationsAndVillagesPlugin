@@ -1,14 +1,17 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.listeners;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
 import net.minecraft.server.v1_16_R3.EntityVillager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 public class WorldListener implements Listener {
     private Main plugin;
@@ -18,6 +21,15 @@ public class WorldListener implements Listener {
      */
     public WorldListener(Main plugin) {
         this.plugin = plugin;
+    }
+
+    //Adds players to data when they join if not already on the list
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent e) {
+        if (Main.nationsManager.getPlayerByUUID(e.getPlayer().getUniqueId()) == null) {
+            Main.nationsManager.addPlayer(e.getPlayer());
+            e.getPlayer().sendMessage(ChatColor.GREEN + "You received $1000 for being a new player");
+        }
     }
 
     //Replaces all spawned villagers with NationsVillagers
