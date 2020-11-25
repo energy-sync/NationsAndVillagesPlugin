@@ -1,5 +1,6 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
+import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.money;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.nation;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -20,6 +21,11 @@ public class NAVCommandExecutor implements CommandExecutor {
             String cleanCmd = cmd.getName().toLowerCase();
 
             switch (cleanCmd) {
+                case "money":
+                case "balance":
+                case "bal":
+                    return money.run(cleanPlayer, cleanCmd, args);
+
                 case "nation":
                     return nation.run(cleanPlayer, cleanCmd, args);
 

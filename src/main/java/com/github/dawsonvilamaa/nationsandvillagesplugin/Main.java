@@ -31,6 +31,7 @@ public class Main extends JavaPlugin {
 
         //register commands
         NAVCommandExecutor commandExecutor = new NAVCommandExecutor(this);
+        getCommand("money").setExecutor(commandExecutor);
         getCommand("nation").setExecutor(commandExecutor);
 
         //register events

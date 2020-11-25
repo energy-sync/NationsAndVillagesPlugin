@@ -8,6 +8,7 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Village.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\Main.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\WorldListener.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\PlayerListener.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\commands\money.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\NationsPlayerNotFoundException.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillagerNotFoundException.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\NationsManager.class
