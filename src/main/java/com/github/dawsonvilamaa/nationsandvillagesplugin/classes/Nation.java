@@ -23,7 +23,7 @@ public class Nation {
     public Nation(String name, Player owner) {
         this.name = name;
         this.id = Main.nationsManager.nextNationID++;
-        this.owner = new NationsPlayer(owner); //CHANGE THIS ONCE DATA MANAGEMENT IS DONE -> Main.nationsManager.getPlayers().get(owner.getUniqueId());
+        this.owner = Main.nationsManager.getPlayers().get(owner.getUniqueId());
         this.population = 0;
         this.villages = new ArrayList<Village>();
     }
@@ -33,7 +33,7 @@ public class Nation {
         this.id = Integer.parseInt(jsonNation.get("id").toString());
         this.owner = Main.nationsManager.getPlayerByUUID(UUID.fromString(jsonNation.get("owner").toString()));
         this.population = Integer.parseInt(jsonNation.get("population").toString());
-
+        this.villages = new ArrayList<Village>(); //change later
     }
 
     /**
