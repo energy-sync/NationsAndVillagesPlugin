@@ -5,13 +5,16 @@ D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawso
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\NAVCommandExecutor.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\NationsVillagerListener.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsPlayer.java
+D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsChunk.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\NationsPlayerNotFoundException.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\PlayerListener.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\commands\nation.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillagerNotFoundException.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\commands\money.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\commands\Command.java
+D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\commands\claim.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\WorldListener.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\Main.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Village.java
+D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\commands\unclaim.java
 D:\User\Documents\Coding\NationsAndVillagesPlugin\src\main\java\com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillageNotFoundException.java

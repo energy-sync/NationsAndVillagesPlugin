@@ -22,7 +22,7 @@ public class Village {
      */
     public Village(String name, Nation nation, Location location) {
         this.name = name;
-        this.id = Main.nationsManager.nextVillageID;
+        this.id = Main.nationsManager.nextVillageID();
         this.nation = nation;
         this.population = 0;
         this.villagers = new ArrayList<NationsVillager>();

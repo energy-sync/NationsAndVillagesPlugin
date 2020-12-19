@@ -5,10 +5,9 @@ import org.bukkit.entity.Player;
 public interface Command {
     /**
      * @param sender
-     * @param cmd
      * @param args
      */
-    public static boolean run(Player sender, String cmd, String[] args) {
+    public static boolean run(Player sender, String[] args) {
         return false;
     }
 }

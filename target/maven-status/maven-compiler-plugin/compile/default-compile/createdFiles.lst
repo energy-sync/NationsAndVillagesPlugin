@@ -1,4 +1,5 @@
 com\github\dawsonvilamaa\nationsandvillagesplugin\NAVCommandExecutor.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\commands\unclaim.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsVillager.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\nation.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillageNotFoundException.class
@@ -12,6 +13,8 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\commands\money.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\NationsPlayerNotFoundException.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillagerNotFoundException.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\NationsManager.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\commands\claim.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsChunk.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsPlayer.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Nation.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\NationsVillagerListener.class
