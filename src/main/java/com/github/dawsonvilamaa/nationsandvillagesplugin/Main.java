@@ -1,10 +1,12 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.PlayerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.WorldListener;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONArray;
@@ -31,7 +33,9 @@ public class Main extends JavaPlugin {
 
         //register commands
         NAVCommandExecutor commandExecutor = new NAVCommandExecutor(this);
+        getCommand("claim").setExecutor(commandExecutor);
         getCommand("nation").setExecutor(commandExecutor);
+        getCommand("unclaim").setExecutor(commandExecutor);
 
         //register events
         PluginManager pm = getServer().getPluginManager();
@@ -43,7 +47,7 @@ public class Main extends JavaPlugin {
         File dir = new File("plugins\\NationsAndVillages");
         if (!dir.exists()) dir.mkdir();
 
-        //read data
+        //load data
         JSONParser parser = new JSONParser();
         try {
             //load players
@@ -53,11 +57,19 @@ public class Main extends JavaPlugin {
                 NationsPlayer player = new NationsPlayer(iterator.next());
                 nationsManager.getPlayers().put(player.getUUID(), player);
             }
+
             //load nations
             JSONArray jsonNations = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\nations.json"));
             iterator = jsonNations.iterator();
             while (iterator.hasNext())
-                nationsManager.getNations().add(new Nation(iterator.next()));
+                nationsManager.addNation(new Nation(iterator.next()));
+
+            //load chunks
+            JSONArray jsonChunks = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\chunks.json"));
+            iterator = jsonChunks.iterator();
+            while (iterator.hasNext())
+                nationsManager.getChunks().add(new NationsChunk(iterator.next()));
+
         } catch(IOException e) {
             getLogger().info(e.getMessage());
         } catch(ParseException ex) {
@@ -89,7 +101,7 @@ public class Main extends JavaPlugin {
 
         //save nations data
         JSONArray jsonNations = new JSONArray();
-        for (Nation nation : nationsManager.getNations())
+        for (Nation nation : nationsManager.getNations().values())
             jsonNations.add(nation.toJSON());
 
         FileWriter nationsFile = null;
@@ -107,5 +119,24 @@ public class Main extends JavaPlugin {
             }
         }
 
+        //save chunk data
+        JSONArray jsonChunks = new JSONArray();
+        for (NationsChunk chunk : nationsManager.getChunks())
+            jsonChunks.add(chunk.toJSON());
+
+        FileWriter chunksFile = null;
+        try {
+            chunksFile = new FileWriter("plugins\\NationsAndVillages\\chunks.json");
+            chunksFile.write(jsonChunks.toJSONString());
+        } catch (IOException e) {
+            getLogger().info(e.getMessage());
+        } finally {
+            try {
+                chunksFile.flush();
+                chunksFile.close();
+            } catch(IOException e) {
+                getLogger().info(e.getMessage());
+            }
+        }
     }
 }

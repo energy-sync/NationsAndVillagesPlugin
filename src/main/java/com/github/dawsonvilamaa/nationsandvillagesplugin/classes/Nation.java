@@ -20,10 +20,10 @@ public class Nation {
      * @param name
      * @param owner
      */
-    public Nation(String name, Player owner) {
+    public Nation(String name, Player owner, int id) {
         this.name = name;
-        this.id = Main.nationsManager.nextNationID++;
-        this.owner = new NationsPlayer(owner); //CHANGE THIS ONCE DATA MANAGEMENT IS DONE -> Main.nationsManager.getPlayers().get(owner.getUniqueId());
+        this.id = id;
+        this.owner = Main.nationsManager.getPlayers().get(owner.getUniqueId());
         this.population = 0;
         this.villages = new ArrayList<Village>();
     }
@@ -33,7 +33,7 @@ public class Nation {
         this.id = Integer.parseInt(jsonNation.get("id").toString());
         this.owner = Main.nationsManager.getPlayerByUUID(UUID.fromString(jsonNation.get("owner").toString()));
         this.population = Integer.parseInt(jsonNation.get("population").toString());
-
+        //villages
     }
 
     /**
@@ -130,6 +130,10 @@ public class Nation {
         throw new VillageNotFoundException();
     }
 
+    /**
+     * Returns this Nation as a JSONObject
+     * @return jsonNation
+     */
     public JSONObject toJSON() {
         JSONObject jsonNation = new JSONObject();
         jsonNation.put("name", this.name);
@@ -137,9 +141,9 @@ public class Nation {
         jsonNation.put("owner", this.owner.getUUID().toString());
         jsonNation.put("population", String.valueOf(this.population));
         JSONArray jsonVillages = new JSONArray();
-        for (Village village : this.villages)
+        /*for (Village village : this.villages)
             jsonVillages.add(String.valueOf(village.getID()));
-        jsonNation.put("villages", jsonVillages);
+        jsonNation.put("villages", jsonVillages);*/
         return jsonNation;
     }
 }

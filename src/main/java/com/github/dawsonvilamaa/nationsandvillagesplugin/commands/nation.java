@@ -2,6 +2,7 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -9,10 +10,9 @@ public class nation implements Command {
 
     /**
      * @param player
-     * @param cmd
      * @param args
      */
-    public static boolean run(Player player, String cmd, String[] args) {
+    public static boolean run(Player player, String[] args) {
         if (args.length == 0) return false;
         switch (args[0]) {
             case "create":
@@ -28,7 +28,10 @@ public class nation implements Command {
                     if (Main.nationsManager.getNationByName(fullName) != null)
                         player.sendMessage(ChatColor.RED + "A nation with that name already exists");
                     else {
-                        Main.nationsManager.addNation(new Nation(fullName, player));
+                        Nation newNation = new Nation(fullName, player, Main.nationsManager.nextNationID());
+                        Main.nationsManager.addNation(newNation);
+                        NationsPlayer nationsPlayer = Main.nationsManager.getPlayerByUUID(player.getUniqueId());
+                        nationsPlayer.setNationID(newNation.getID());
                         player.sendMessage(ChatColor.GREEN + "You have successfully created the nation \"" + fullName + "\"");
                     }
                 }
@@ -46,14 +49,13 @@ public class nation implements Command {
                             + ChatColor.WHITE + infoNation.getName()
                             + ChatColor.GOLD + "\n--------------------\n"
                             + ChatColor.WHITE + "Owner: " + infoNation.getOwner().getName()
-                            + "\nPopulation: " + infoNation.getPopulation()
-                            + "\nVillages: " + infoNation.getVillages().size());
+                            + "\nPopulation: " + infoNation.getPopulation());
                 }
                 return true;
 
             case "list":
                 String list = ChatColor.GOLD + "List of nations:" + ChatColor.WHITE;
-                for (Nation nation : Main.nationsManager.getNations()) list += "\n" + nation.getName();
+                for (Nation nation : Main.nationsManager.getNations().values()) list += "\n" + nation.getName();
                 player.sendMessage(list);
                 return true;
         }
