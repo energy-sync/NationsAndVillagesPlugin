@@ -1,12 +1,11 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.classes;
 
-import net.minecraft.server.v1_16_R3.ChatComponentText;
-import net.minecraft.server.v1_16_R3.EntityTypes;
-import net.minecraft.server.v1_16_R3.EntityVillager;
+import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.json.simple.JSONObject;
@@ -14,10 +13,8 @@ import org.json.simple.JSONObject;
 public class NationsVillager extends EntityVillager {
     private String name;
     private int id;
-    private Nation nation;
+    private int nationID;
     private Village village;
-
-    public boolean isNationsVillager;
 
     /**
      * Constructor with no name, defaults to "Villager"
@@ -26,8 +23,8 @@ public class NationsVillager extends EntityVillager {
     public NationsVillager(World world) {
         super(EntityTypes.VILLAGER, ((CraftWorld) world).getHandle());
         this.name = "Villager";
-        this.id = -1;
-        this.isNationsVillager = true;
+        this.id = -1; //change later
+        this.nationID = -1;
     }
 
     /**
@@ -38,7 +35,21 @@ public class NationsVillager extends EntityVillager {
     public NationsVillager(World world, String name) {
         super(EntityTypes.VILLAGER, ((CraftWorld) world).getHandle());
         this.name = name;
-        this.id = -1;
+        this.id = -1; //change later
+        this.nationID = -1;
+    }
+
+    /**
+     * Constructor with no name but with transferred VillagerData
+     * @param world
+     * @param villagerData
+     */
+    public NationsVillager(World world, VillagerData villagerData) {
+        super(EntityTypes.VILLAGER, ((CraftWorld) world).getHandle());
+        this.name = "Villager";
+        this.id = -1; //change later
+        this.nationID = -1;
+        setVillagerData(villagerData);
     }
 
     /**
@@ -64,17 +75,17 @@ public class NationsVillager extends EntityVillager {
     }
 
     /**
-     * @return nation
+     * @return nationID
      */
-    public Nation getNation() {
-        return this.nation;
+    public int getNationID() {
+        return this.nationID;
     }
 
     /**
-     * @param newNation
+     * @param nationID
      */
-    public void setNation(Nation newNation) {
-        this.nation = newNation;
+    public void setNationID(int nationID) {
+        this.nationID = nationID;
     }
 
     /**
@@ -123,7 +134,7 @@ public class NationsVillager extends EntityVillager {
         JSONObject jsonVillager = new JSONObject();
         jsonVillager.put("name", this.name);
         jsonVillager.put("id", String.valueOf(this.id));
-        jsonVillager.put("nation", String.valueOf(this.nation.getID()));
+        jsonVillager.put("nation", String.valueOf(this.nationID));
         jsonVillager.put("village", this.village.getID());
         return jsonVillager;
     }

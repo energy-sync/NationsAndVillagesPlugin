@@ -1,17 +1,18 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.listeners;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
 import net.minecraft.server.v1_16_R3.EntityVillager;
-import org.bukkit.Bukkit;
+import net.minecraft.server.v1_16_R3.VillagerData;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
 
 public class WorldListener implements Listener {
     private Main plugin;
@@ -41,7 +42,25 @@ public class WorldListener implements Listener {
                 e.setCancelled(true);
                 Location loc = e.getLocation();
                 NationsVillager nationsVillager = new NationsVillager(loc.getWorld());
-                nationsVillager.spawn(e.getLocation());
+                nationsVillager.spawn(loc);
+            }
+        }
+    }
+
+    //Replaces all already existing villagers with NationsVillagers when new chunks are loaded
+    @EventHandler
+    public void onChunkLoad(ChunkLoadEvent e) {
+        if (e.isNewChunk() == true) {
+            for (Entity entity : e.getChunk().getEntities()) {
+                if (entity instanceof CraftVillager) {
+                    EntityVillager villager = ((CraftVillager) entity).getHandle();
+                    if (!(villager instanceof NationsVillager)) {
+                        entity.remove();
+                        Location loc = entity.getLocation();
+                        NationsVillager nationsVillager = new NationsVillager(loc.getWorld(), villager.getVillagerData());
+                        nationsVillager.spawn(loc);
+                    }
+                }
             }
         }
     }

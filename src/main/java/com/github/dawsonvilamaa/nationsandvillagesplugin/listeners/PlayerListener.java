@@ -36,7 +36,7 @@ public class PlayerListener implements Listener {
                         + ChatColor.WHITE + nationsVillager.getName() + "\n"
                         + ChatColor.YELLOW + "--------------------\n"
                         + ChatColor.WHITE + "Nation: ";
-                if (nationsVillager.getNation() != null) infoStr += nationsVillager.getNation().getName();
+                if (nationsVillager.getNationID() != -1) infoStr += Main.nationsManager.getNationByID(nationsVillager.getNationID());
                 else infoStr += "none";
                 infoStr += "\nVillager: ";
                 if (nationsVillager.getVillage() != null) infoStr += nationsVillager.getVillage().getName();

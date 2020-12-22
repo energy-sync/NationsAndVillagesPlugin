@@ -3,8 +3,13 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
+import net.minecraft.server.v1_16_R3.EntityVillager;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 public class claim implements Command {
@@ -34,6 +39,17 @@ public class claim implements Command {
             Main.nationsManager.addChunk(currentChunk.getX(), currentChunk.getZ(), player.getNationID());
             sender.sendMessage(ChatColor.GREEN + "Claimed this chunk for " + Main.nationsManager.getNationByID(player.getNationID()).getName());
             player.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), player.getNationID())); //update currentChunk
+
+            //update all villagers in the chunk
+            for (Entity entity : currentChunk.getEntities()) {
+                if (entity instanceof CraftVillager) {
+                    EntityVillager villager = ((CraftVillager) entity).getHandle();
+                    if (villager instanceof NationsVillager) {
+                        ((NationsVillager) villager).setNationID(player.getNationID());
+                    }
+                }
+            }
+
             return true;
         }
     }

@@ -75,6 +75,10 @@ public class Main extends JavaPlugin {
         } catch(ParseException ex) {
             getLogger().info(ex.getMessage());
         }
+
+        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
+        saveConfig();
     }
 
     @Override
