@@ -44,9 +44,7 @@ public class claim implements Command {
             for (Entity entity : currentChunk.getEntities()) {
                 if (entity instanceof CraftVillager) {
                     EntityVillager villager = ((CraftVillager) entity).getHandle();
-                    if (villager instanceof NationsVillager) {
-                        ((NationsVillager) villager).setNationID(player.getNationID());
-                    }
+                    Main.nationsManager.getVillagers().get(villager.getUniqueID()).setNationID(player.getNationID());
                 }
             }
 

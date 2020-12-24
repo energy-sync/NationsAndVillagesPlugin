@@ -4,6 +4,7 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
 import net.minecraft.server.v1_16_R3.EntityVillager;
 import net.minecraft.server.v1_16_R3.VillagerData;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
@@ -38,11 +39,8 @@ public class WorldListener implements Listener {
     public void onVillagerSpawn(EntitySpawnEvent e) {
         if (e.getEntity() instanceof CraftVillager) {
             EntityVillager villager = ((CraftVillager) e.getEntity()).getHandle();
-            if (!(villager instanceof NationsVillager)) {
-                e.setCancelled(true);
-                Location loc = e.getLocation();
-                NationsVillager nationsVillager = new NationsVillager(loc.getWorld());
-                nationsVillager.spawn(loc);
+            if (Main.nationsManager.getVillagers().get(villager.getUniqueID()) == null) {
+                Main.nationsManager.getVillagers().put(villager.getUniqueID(), new NationsVillager(villager));
             }
         }
     }
@@ -54,11 +52,9 @@ public class WorldListener implements Listener {
             for (Entity entity : e.getChunk().getEntities()) {
                 if (entity instanceof CraftVillager) {
                     EntityVillager villager = ((CraftVillager) entity).getHandle();
-                    if (!(villager instanceof NationsVillager)) {
-                        entity.remove();
-                        Location loc = entity.getLocation();
-                        NationsVillager nationsVillager = new NationsVillager(loc.getWorld(), villager.getVillagerData());
-                        nationsVillager.spawn(loc);
+                    if (Main.nationsManager.getVillagers().get(villager.getUniqueID()) == null) {
+                        Main.nationsManager.getVillagers().put(villager.getUniqueID(), new NationsVillager(villager));
+                        Bukkit.broadcastMessage("Villagers: " + Main.nationsManager.getVillagers().values().size());
                     }
                 }
             }

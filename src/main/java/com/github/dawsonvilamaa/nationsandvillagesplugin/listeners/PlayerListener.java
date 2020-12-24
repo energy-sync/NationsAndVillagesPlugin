@@ -30,8 +30,8 @@ public class PlayerListener implements Listener {
     public void onNationsVillagerInteract(PlayerInteractEntityEvent e) {
         if (e.getRightClicked() instanceof CraftVillager) {
             EntityVillager villager = ((CraftVillager) e.getRightClicked()).getHandle();
-            if (villager instanceof NationsVillager && e.getHand().equals(EquipmentSlot.HAND)) {
-                NationsVillager nationsVillager = (NationsVillager) villager;
+            if (e.getHand().equals(EquipmentSlot.HAND)) {
+                NationsVillager nationsVillager = Main.nationsManager.getVillagers().get(villager.getUniqueID());
                 String infoStr = ChatColor.YELLOW + "--------------------\n"
                         + ChatColor.WHITE + nationsVillager.getName() + "\n"
                         + ChatColor.YELLOW + "--------------------\n"

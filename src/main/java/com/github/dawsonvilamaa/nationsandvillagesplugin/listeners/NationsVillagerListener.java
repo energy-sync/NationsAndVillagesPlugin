@@ -35,13 +35,11 @@ public class NationsVillagerListener implements Listener {
     public void onTakeDamage(EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof CraftVillager) {
             EntityVillager villager = ((CraftVillager) e.getEntity()).getHandle();
-            if (villager instanceof NationsVillager) {
-                NationsVillager nationsVillager = (NationsVillager) villager;
-                if (e.getDamager() instanceof CraftPlayer)
-                    nationsVillager.speakToPlayer((CraftPlayer) e.getDamager(), playerAttackMessages[random.nextInt(playerAttackMessages.length)]);
-                else if (e.getDamager() instanceof CraftZombie)
-                    nationsVillager.shout(zombieAttackMessages[random.nextInt(zombieAttackMessages.length)]);
-            }
+            NationsVillager nationsVillager = Main.nationsManager.getVillagers().get(villager.getUniqueID());
+            if (e.getDamager() instanceof CraftPlayer)
+                nationsVillager.speakToPlayer((CraftPlayer) e.getDamager(), playerAttackMessages[random.nextInt(playerAttackMessages.length)]);
+            else if (e.getDamager() instanceof CraftZombie)
+                nationsVillager.shout(zombieAttackMessages[random.nextInt(zombieAttackMessages.length)]);
         }
     }
 
@@ -51,10 +49,9 @@ public class NationsVillagerListener implements Listener {
         if (e.getRightClicked() instanceof CraftVillager) {
             EntityVillager villager = ((CraftVillager) e.getRightClicked()).getHandle();
             ItemStack item = e.getPlayer().getInventory().getItemInMainHand();
-            if (villager instanceof NationsVillager
-                && e.getHand().equals(EquipmentSlot.HAND)
+            if (e.getHand().equals(EquipmentSlot.HAND)
                 && item.getType() == Material.NAME_TAG && item.getItemMeta().hasDisplayName() == true) {
-                    NationsVillager nationsVillager = (NationsVillager) villager;
+                    NationsVillager nationsVillager = Main.nationsManager.getVillagers().get(villager.getUniqueID());
                     nationsVillager.setName(item.getItemMeta().getDisplayName());
             }
         }

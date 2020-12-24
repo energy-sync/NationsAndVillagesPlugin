@@ -1,9 +1,6 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Village;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.VillageNotFoundException;
 import org.bukkit.Bukkit;
@@ -16,6 +13,7 @@ import java.util.UUID;
 public class NationsManager {
     private HashMap<Integer, Nation> nations;
     private ArrayList<Village> villages;
+    private HashMap<UUID, NationsVillager> villagers;
     private HashMap<UUID, NationsPlayer> players;
     private ArrayList<NationsChunk> chunks;
 
@@ -27,6 +25,7 @@ public class NationsManager {
     public NationsManager() {
         this.nations = new HashMap<Integer, Nation>();
         this.villages = new ArrayList<Village>();
+        this.villagers = new HashMap<UUID, NationsVillager>();
         this.players = new HashMap<UUID, NationsPlayer>();
         this.chunks = new ArrayList<NationsChunk>();
         this.nextNationID = -1;
@@ -46,6 +45,13 @@ public class NationsManager {
      */
     public ArrayList<Village> getVillages() {
         return this.villages;
+    }
+
+    /**
+     * @return villagers
+     */
+    public HashMap<UUID, NationsVillager> getVillagers() {
+        return this.villagers;
     }
 
     /**

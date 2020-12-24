@@ -10,46 +10,29 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.json.simple.JSONObject;
 
-public class NationsVillager extends EntityVillager {
+public class NationsVillager {
+    private EntityVillager entity;
     private String name;
     private int id;
     private int nationID;
     private Village village;
 
     /**
-     * Constructor with no name, defaults to "Villager"
-     * @param world
+     * Creates a NationsVillager data class and attaches it to an entity in the world
+     * @param entity
      */
-    public NationsVillager(World world) {
-        super(EntityTypes.VILLAGER, ((CraftWorld) world).getHandle());
+    public NationsVillager(EntityVillager entity) {
+        this.entity = entity;
         this.name = "Villager";
         this.id = -1; //change later
         this.nationID = -1;
     }
 
     /**
-     * Constructor with name
-     * @param world
-     * @param name
+     * @return entity
      */
-    public NationsVillager(World world, String name) {
-        super(EntityTypes.VILLAGER, ((CraftWorld) world).getHandle());
-        this.name = name;
-        this.id = -1; //change later
-        this.nationID = -1;
-    }
-
-    /**
-     * Constructor with no name but with transferred VillagerData
-     * @param world
-     * @param villagerData
-     */
-    public NationsVillager(World world, VillagerData villagerData) {
-        super(EntityTypes.VILLAGER, ((CraftWorld) world).getHandle());
-        this.name = "Villager";
-        this.id = -1; //change later
-        this.nationID = -1;
-        setVillagerData(villagerData);
+    public EntityVillager getEntity() {
+        return this.entity;
     }
 
     /**
@@ -63,7 +46,7 @@ public class NationsVillager extends EntityVillager {
      * @param newName
      */
     public void setName(String newName) {
-        setCustomName(new ChatComponentText(newName));
+        entity.setCustomName(new ChatComponentText(newName));
         this.name = newName;
     }
 
@@ -103,15 +86,6 @@ public class NationsVillager extends EntityVillager {
     }
 
     /**
-     * Spawns the village at a given location
-     * @param loc
-     */
-    public void spawn(Location loc) {
-        setPositionRotation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
-        world.addEntity(this, CreatureSpawnEvent.SpawnReason.CUSTOM);
-    }
-
-    /**
      * Send a message from this villager to a specified player
      * @param player
      * @param message
@@ -126,7 +100,7 @@ public class NationsVillager extends EntityVillager {
      */
     public void shout(String message) {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (Bukkit.getEntity(getUniqueID()).getLocation().distance(player.getLocation()) <= 30) speakToPlayer(player, message);
+            if (Bukkit.getEntity(entity.getUniqueID()).getLocation().distance(player.getLocation()) <= 30) speakToPlayer(player, message);
         }
     }
 
