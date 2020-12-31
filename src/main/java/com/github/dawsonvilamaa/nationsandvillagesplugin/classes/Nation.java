@@ -14,7 +14,6 @@ public class Nation {
     private int id;
     private NationsPlayer owner;
     private int population;
-    private ArrayList<Village> villages;
 
     /**
      * @param name
@@ -25,7 +24,6 @@ public class Nation {
         this.id = id;
         this.owner = Main.nationsManager.getPlayers().get(owner.getUniqueId());
         this.population = 0;
-        this.villages = new ArrayList<Village>();
     }
 
     public Nation(JSONObject jsonNation) {
@@ -76,58 +74,6 @@ public class Nation {
      */
     public int getPopulation() {
         return this.population;
-    }
-
-    /**
-     * Returns searched village by given ID, returns null if it does not exist
-     * @param id
-     * @return village
-     */
-    public Village getVillageByID(int id) {
-        for (Village village : this.villages) {
-            if (village.getID() == id) return village;
-        }
-        return null;
-    }
-
-    /**
-     * Returns searched village by given name, returns null if it does not exist
-     * @param name
-     * @return village
-     */
-    public Village getVillageByName(String name) {
-        for (Village village : this.villages) {
-            if (village.getName().equals(name)) return village;
-        }
-        return null;
-    }
-
-    /**
-     * @return villages
-     */
-    public ArrayList<Village> getVillages() {
-        return this.villages;
-    }
-
-    /**
-     * Adds a village to this nation and updates the nation's population
-     * @param newVillage
-     */
-    public void addVillage(Village newVillage) {
-        this.population += newVillage.getPopulation();
-        newVillage.setNation(this);
-        this.villages.add(newVillage);
-    }
-
-    public void removeVillage(Village removedVillage) throws VillageNotFoundException {
-        for (Village village : Main.nationsManager.getVillages()) {
-            if (village.getID() == removedVillage.getID()) {
-                this.population -= removedVillage.getPopulation();
-                this.villages.remove(id);
-                return;
-            }
-        }
-        throw new VillageNotFoundException();
     }
 
     /**

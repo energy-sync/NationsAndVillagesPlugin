@@ -5,7 +5,6 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\commands\nation.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillageNotFoundException.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\Command.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\NationNotFoundException.class
-com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Village.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\Main.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\WorldListener.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\PlayerListener.class

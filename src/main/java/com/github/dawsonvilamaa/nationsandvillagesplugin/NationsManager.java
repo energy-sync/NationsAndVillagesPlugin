@@ -12,7 +12,6 @@ import java.util.UUID;
 
 public class NationsManager {
     private HashMap<Integer, Nation> nations;
-    private ArrayList<Village> villages;
     private HashMap<UUID, NationsVillager> villagers;
     private HashMap<UUID, NationsPlayer> players;
     private ArrayList<NationsChunk> chunks;
@@ -24,7 +23,6 @@ public class NationsManager {
 
     public NationsManager() {
         this.nations = new HashMap<Integer, Nation>();
-        this.villages = new ArrayList<Village>();
         this.villagers = new HashMap<UUID, NationsVillager>();
         this.players = new HashMap<UUID, NationsPlayer>();
         this.chunks = new ArrayList<NationsChunk>();
@@ -38,13 +36,6 @@ public class NationsManager {
      */
     public HashMap<Integer, Nation> getNations() {
         return this.nations;
-    }
-
-    /**
-     * @return villages
-     */
-    public ArrayList<Village> getVillages() {
-        return this.villages;
     }
 
     /**
@@ -121,29 +112,6 @@ public class NationsManager {
             if (nation.getName().toLowerCase().equals(name.toLowerCase())) return nation;
         }
         return null;
-    }
-
-    /**
-     * Adds a village to the worldwide list
-     * @param newVillage
-     */
-    public void addVillage(Village newVillage) {
-        this.villages.add(newVillage);
-    }
-
-    /**
-     * Removes a village from the worldwide list
-     * @param removedVillage
-     * @throws VillageNotFoundException
-     */
-    public void removeVillage(Village removedVillage) throws VillageNotFoundException {
-        for (Village village : this.villages) {
-            if (village.equals(removedVillage)) {
-                this.villages.remove(village);
-                return;
-            }
-        }
-        throw new VillageNotFoundException();
     }
 
     /**

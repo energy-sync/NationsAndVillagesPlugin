@@ -10,12 +10,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.json.simple.JSONObject;
 
+import java.util.UUID;
+
 public class NationsVillager {
     private EntityVillager entity;
     private String name;
-    private int id;
     private int nationID;
-    private Village village;
 
     /**
      * Creates a NationsVillager data class and attaches it to an entity in the world
@@ -24,8 +24,16 @@ public class NationsVillager {
     public NationsVillager(EntityVillager entity) {
         this.entity = entity;
         this.name = "Villager";
-        this.id = -1; //change later
         this.nationID = -1;
+    }
+
+    /**
+     * @param jsonVillager
+     */
+    public NationsVillager(JSONObject jsonVillager) {
+        this.entity = ((CraftVillager) Bukkit.getEntity(UUID.fromString(jsonVillager.get("uuid").toString()))).getHandle();
+        this.name = jsonVillager.get("name").toString();
+        this.nationID = Integer.parseInt(jsonVillager.get("nationID").toString());
     }
 
     /**
@@ -33,6 +41,13 @@ public class NationsVillager {
      */
     public EntityVillager getEntity() {
         return this.entity;
+    }
+
+    /**
+     * @return uuid
+     */
+    public UUID getUniqueID() {
+        return this.entity.getUniqueID();
     }
 
     /**
@@ -51,13 +66,6 @@ public class NationsVillager {
     }
 
     /**
-     * @return id
-     */
-    public int getID() {
-        return this.id;
-    }
-
-    /**
      * @return nationID
      */
     public int getNationID() {
@@ -69,20 +77,6 @@ public class NationsVillager {
      */
     public void setNationID(int nationID) {
         this.nationID = nationID;
-    }
-
-    /**
-     * @return village
-     */
-    public Village getVillage() {
-        return this.village;
-    }
-
-    /**
-     * @param newVillage
-     */
-    public void setVillage(Village newVillage) {
-        this.village = newVillage;
     }
 
     /**
@@ -106,10 +100,9 @@ public class NationsVillager {
 
     public JSONObject toJSON() {
         JSONObject jsonVillager = new JSONObject();
+        jsonVillager.put("uuid", this.entity.getUniqueID().toString());
         jsonVillager.put("name", this.name);
-        jsonVillager.put("id", String.valueOf(this.id));
-        jsonVillager.put("nation", String.valueOf(this.nationID));
-        jsonVillager.put("village", this.village.getID());
+        jsonVillager.put("nationID", String.valueOf(this.nationID));
         return jsonVillager;
     }
 }

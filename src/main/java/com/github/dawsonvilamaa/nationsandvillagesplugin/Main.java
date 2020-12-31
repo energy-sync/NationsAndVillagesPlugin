@@ -3,6 +3,7 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.PlayerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.WorldListener;
@@ -64,6 +65,14 @@ public class Main extends JavaPlugin {
             while (iterator.hasNext())
                 nationsManager.addNation(new Nation(iterator.next()));
 
+            //load villagers
+            JSONArray jsonVillagers = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\villagers.json"));
+            iterator = jsonVillagers.iterator();
+            while (iterator.hasNext()) {
+                NationsVillager nationsVillager = new NationsVillager(iterator.next());
+                nationsManager.addVillager(nationsVillager.getEntity().getUniqueID(), nationsVillager);
+            }
+
             //load chunks
             JSONArray jsonChunks = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\chunks.json"));
             iterator = jsonChunks.iterator();
@@ -115,6 +124,26 @@ public class Main extends JavaPlugin {
                 nationsFile.flush();
                 nationsFile.close();
             } catch(IOException e) {
+                getLogger().info(e.getMessage());
+            }
+        }
+
+        //save villager data
+        JSONArray jsonVillagers = new JSONArray();
+        for (NationsVillager villager : nationsManager.getVillagers().values())
+            jsonVillagers.add(villager.toJSON());
+
+        FileWriter villagersFile = null;
+        try {
+            villagersFile = new FileWriter("plugins\\NationsAndVillages\\villagers.json");
+            villagersFile.write(jsonVillagers.toJSONString());
+        } catch (IOException e) {
+            getLogger().info(e.getMessage());
+        } finally {
+            try {
+                villagersFile.flush();
+                villagersFile.close();
+            } catch (IOException e) {
                 getLogger().info(e.getMessage());
             }
         }

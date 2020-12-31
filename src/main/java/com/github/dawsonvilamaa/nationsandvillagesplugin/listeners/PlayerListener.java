@@ -38,9 +38,6 @@ public class PlayerListener implements Listener {
                         + ChatColor.WHITE + "Nation: ";
                 if (nationsVillager.getNationID() != -1) infoStr += Main.nationsManager.getNationByID(nationsVillager.getNationID()).getName();
                 else infoStr += "none";
-                infoStr += "\nVillager: ";
-                if (nationsVillager.getVillage() != null) infoStr += nationsVillager.getVillage().getName();
-                else infoStr += "none";
                 e.getPlayer().sendMessage(infoStr);
             }
         }
