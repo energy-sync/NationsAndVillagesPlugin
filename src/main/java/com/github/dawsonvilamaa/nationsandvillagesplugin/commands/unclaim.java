@@ -3,8 +3,12 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
+import net.minecraft.server.v1_16_R3.EntityVillager;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 public class unclaim {
@@ -29,6 +33,16 @@ public class unclaim {
                         Main.nationsManager.getChunks().remove(chunk);
                         sender.sendMessage(ChatColor.GREEN + "Unclaimed this chunk from " + Main.nationsManager.getNationByID(player.getNationID()).getName());
                         player.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), -1)); //update currentChunk
+                        //update all villagers in the chunk
+                        for (Entity entity : currentChunk.getEntities()) {
+                            if (entity instanceof CraftVillager) {
+                                EntityVillager villager = ((CraftVillager) entity).getHandle();
+                                if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).getNationID() == player.getNationID()) {
+                                    Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).setNationID(-1);
+                                    Main.nationsManager.getNationByID(player.getNationID()).decrementPopulation();
+                                }
+                            }
+                        }
                     }
                     else sender.sendMessage(ChatColor.RED + "Your nation does not own this chunk");
                     return true;

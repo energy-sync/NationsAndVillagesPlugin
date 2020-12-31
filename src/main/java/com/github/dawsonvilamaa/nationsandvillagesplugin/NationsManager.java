@@ -147,6 +147,31 @@ public class NationsManager {
     }
 
     /**
+     * @param uuid
+     * @param nationsVillager
+     */
+    public void addVillager(UUID uuid, NationsVillager nationsVillager) {
+        this.villagers.put(uuid, nationsVillager);
+        Bukkit.broadcastMessage("Villagers: " + this.villagers.values().size());
+    }
+
+    /**
+     * @param uuid
+     */
+    public void removeVillager(UUID uuid) {
+        this.villagers.remove(uuid);
+        Bukkit.broadcastMessage("Villagers: " + this.villagers.values().size());
+    }
+
+    /**
+     * @param uuid
+     * @return
+     */
+    public NationsVillager getVillagerByUUID(UUID uuid) {
+        return this.villagers.get(uuid);
+    }
+
+    /**
      * Adds a player to the worldwide list
      * @param newPlayer
      */
@@ -211,7 +236,6 @@ public class NationsManager {
      */
     public int nextNationID() {
         this.nextNationID = this.nextNationID + 1;
-        Bukkit.broadcastMessage(String.valueOf(this.nextNationID));
         return this.nextNationID;
     }
 

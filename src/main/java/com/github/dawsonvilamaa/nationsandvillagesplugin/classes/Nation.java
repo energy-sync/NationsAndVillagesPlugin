@@ -131,6 +131,22 @@ public class Nation {
     }
 
     /**
+     * @return population
+     */
+    public int incrementPopulation() {
+        this.population = this.population + 1;
+        return this.population;
+    }
+
+    /**
+     * @return population
+     */
+    public int decrementPopulation() {
+        this.population = this.population - 1;
+        return this.population;
+    }
+
+    /**
      * Returns this Nation as a JSONObject
      * @return jsonNation
      */

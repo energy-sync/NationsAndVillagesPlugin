@@ -31,12 +31,12 @@ public class PlayerListener implements Listener {
         if (e.getRightClicked() instanceof CraftVillager) {
             EntityVillager villager = ((CraftVillager) e.getRightClicked()).getHandle();
             if (e.getHand().equals(EquipmentSlot.HAND)) {
-                NationsVillager nationsVillager = Main.nationsManager.getVillagers().get(villager.getUniqueID());
+                NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
                 String infoStr = ChatColor.YELLOW + "--------------------\n"
                         + ChatColor.WHITE + nationsVillager.getName() + "\n"
                         + ChatColor.YELLOW + "--------------------\n"
                         + ChatColor.WHITE + "Nation: ";
-                if (nationsVillager.getNationID() != -1) infoStr += Main.nationsManager.getNationByID(nationsVillager.getNationID());
+                if (nationsVillager.getNationID() != -1) infoStr += Main.nationsManager.getNationByID(nationsVillager.getNationID()).getName();
                 else infoStr += "none";
                 infoStr += "\nVillager: ";
                 if (nationsVillager.getVillage() != null) infoStr += nationsVillager.getVillage().getName();
