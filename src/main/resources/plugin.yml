@@ -1,9 +1,27 @@
 main: com.github.dawsonvilamaa.nationsandvillagesplugin.Main
 name: NationsAndVillagesPlugin
 version: 1.0
-author: Dawson Vilamaa and Derek Brown
+author: Dawson Vilamaa
 description: Allows players to create nations and villages to rule over and adds functionality to villages and villagers
 commands:
+  autoclaim:
+    aliases: ac
+    description: automatically claims chunks as you walk through them
+    usage: /autoclaim
+    permission: NationsAndVillages.autoclaim
+    permission-message: You don't have permission to use that command
+  autounclaim:
+    aliases: au
+    description: automatically unclaims chunks as you walk through them
+    usage: /autounclaim
+    permission: NationsAndVillages.autounclaim
+    permission-message: You don't have permission to use that command
+  balance:
+    aliases: [bal, money]
+    description: shows you how much money you have
+    usage: /balance
+    permission: NationsAndVillages.money
+    permission-message: You don't have permission to use that command
   claim:
     description: claims a chunk for your nation
     usage: /claim

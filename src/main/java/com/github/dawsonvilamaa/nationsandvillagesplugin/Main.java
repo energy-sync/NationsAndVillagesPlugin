@@ -34,6 +34,9 @@ public class Main extends JavaPlugin {
 
         //register commands
         NAVCommandExecutor commandExecutor = new NAVCommandExecutor(this);
+        getCommand("autoclaim").setExecutor(commandExecutor);
+        getCommand("autounclaim").setExecutor(commandExecutor);
+        getCommand("balance").setExecutor(commandExecutor);
         getCommand("claim").setExecutor(commandExecutor);
         getCommand("nation").setExecutor(commandExecutor);
         getCommand("unclaim").setExecutor(commandExecutor);

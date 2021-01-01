@@ -1,6 +1,7 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
@@ -35,18 +36,29 @@ public class claim implements Command {
                 }
             }
 
-            //claim chunk
-            Main.nationsManager.addChunk(currentChunk.getX(), currentChunk.getZ(), player.getNationID());
-            sender.sendMessage(ChatColor.GREEN + "Claimed this chunk for " + Main.nationsManager.getNationByID(player.getNationID()).getName());
-            player.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), player.getNationID())); //update currentChunk
+            //check if player has enough money to buy a new chunk
+            Nation nation = Main.nationsManager.getNationByID(player.getNationID());
+            int chunkCost = (nation.getNumChunks() * Main.nationsManager.chunkCost) + Main.nationsManager.chunkCost;
+            if (player.getMoney() - chunkCost < 0) {
+                sender.sendMessage(ChatColor.RED + "You do not have enough money to purchase a new chunk. It costs $" + chunkCost);
+                return true;
+            }
+            else {
+                //claim chunk
+                Main.nationsManager.addChunk(currentChunk.getX(), currentChunk.getZ(), player.getNationID());
+                player.removeMoney(chunkCost);
+                nation.incrementChunks();
+                sender.sendMessage(ChatColor.GREEN + "Claimed this chunk for " + nation.getName() + " for $" + chunkCost);
+                player.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), player.getNationID())); //update currentChunk
 
-            //update all villagers in the chunk
-            for (Entity entity : currentChunk.getEntities()) {
-                if (entity instanceof CraftVillager) {
-                    EntityVillager villager = ((CraftVillager) entity).getHandle();
-                    if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).getNationID() != player.getNationID()) {
-                        Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).setNationID(player.getNationID());
-                        Main.nationsManager.getNationByID(player.getNationID()).incrementPopulation();
+                //update all villagers in the chunk
+                for (Entity entity : currentChunk.getEntities()) {
+                    if (entity instanceof CraftVillager) {
+                        EntityVillager villager = ((CraftVillager) entity).getHandle();
+                        if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).getNationID() != player.getNationID()) {
+                            Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).setNationID(player.getNationID());
+                            nation.incrementPopulation();
+                        }
                     }
                 }
             }

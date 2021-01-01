@@ -29,15 +29,6 @@ public class WorldListener implements Listener {
         this.plugin = plugin;
     }
 
-    //Adds players to data when they join if not already on the list
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent e) {
-        if (Main.nationsManager.getPlayerByUUID(e.getPlayer().getUniqueId()) == null) {
-            Main.nationsManager.addPlayer(e.getPlayer());
-            e.getPlayer().sendMessage(ChatColor.GREEN + "You received $1000 for being a new player");
-        }
-    }
-
     //Replaces all spawned villagers with NationsVillagers
     @EventHandler
     public void onVillagerSpawn(EntitySpawnEvent e) {

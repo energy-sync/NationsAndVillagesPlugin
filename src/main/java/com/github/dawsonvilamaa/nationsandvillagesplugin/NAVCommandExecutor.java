@@ -1,8 +1,6 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
-import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.claim;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.nation;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.unclaim;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,6 +20,15 @@ public class NAVCommandExecutor implements CommandExecutor {
             String cleanCmd = cmd.getName().toLowerCase();
 
             switch (cleanCmd) {
+                case "autoclaim":
+                    return autoclaim.run(cleanPlayer, args);
+
+                case "autounclaim":
+                    return autounclaim.run(cleanPlayer, args);
+
+                case "balance":
+                    return money.run(cleanPlayer, args);
+
                 case "claim":
                     return claim.run(cleanPlayer, args);
 

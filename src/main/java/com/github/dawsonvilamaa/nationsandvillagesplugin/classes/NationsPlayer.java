@@ -1,5 +1,6 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.classes;
 
+import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
@@ -11,6 +12,8 @@ public class NationsPlayer {
     private int money;
     private int nationID;
     private NationsChunk currentChunk;
+    private boolean autoClaim;
+    private boolean autoUnclaim;
 
     /**
      * @param player
@@ -18,9 +21,11 @@ public class NationsPlayer {
     public NationsPlayer(Player player) {
         this.username = player.getName();
         this.uuid = player.getUniqueId();
-        this.money = 1000;
+        this.money = Main.nationsManager.startingMoney;
         this.nationID = -1;
         this.currentChunk = new NationsChunk(-1, -1, -1);
+        this.autoClaim = false;
+        this.autoUnclaim = false;
     }
 
     /**
@@ -32,6 +37,8 @@ public class NationsPlayer {
         this.money = Integer.parseInt(jsonPlayer.get("money").toString());
         this.nationID = Integer.parseInt(jsonPlayer.get("nationID").toString());
         this.currentChunk = new NationsChunk(Integer.parseInt(jsonPlayer.get("currentChunkX").toString()), Integer.parseInt(jsonPlayer.get("currentChunkZ").toString()), Integer.parseInt(jsonPlayer.get("currentChunkNationID").toString()));
+        this.autoClaim = false;
+        this.autoUnclaim = false;
     }
 
     /**
@@ -78,7 +85,7 @@ public class NationsPlayer {
      * @return
      */
     public int removeMoney(int amount) {
-        this.money += amount;
+        this.money -= amount;
         return this.money;
     }
 
@@ -127,5 +134,33 @@ public class NationsPlayer {
      */
     public void setCurrentChunk(NationsChunk chunk) {
         this.currentChunk = chunk;
+    }
+
+    /**
+     * @return autoclaim
+     */
+    public boolean isAutoClaiming() {
+        return this.autoClaim;
+    }
+
+    /**
+     * @param autoClaim
+     */
+    public void setAutoClaim(boolean autoClaim) {
+        this.autoClaim = autoClaim;
+    }
+
+    /**
+     * @return autounclaim
+     */
+    public boolean isAutoUnclaiming() {
+        return this.autoUnclaim;
+    }
+
+    /**
+     * @param autoUnclaim
+     */
+    public void setAutoUnclaim(boolean autoUnclaim) {
+        this.autoUnclaim = autoUnclaim;
     }
 }

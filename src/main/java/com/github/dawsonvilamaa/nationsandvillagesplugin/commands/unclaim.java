@@ -3,7 +3,6 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
 import net.minecraft.server.v1_16_R3.EntityVillager;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -30,8 +29,12 @@ public class unclaim {
                 if (chunk.getX() == currentChunk.getX() && chunk.getZ() == currentChunk.getZ()) {
                     //check if player's nation owns this chunk
                     if (chunk.getNationID() == player.getNationID()) {
+                        //unclaim chunk
                         Main.nationsManager.getChunks().remove(chunk);
-                        sender.sendMessage(ChatColor.GREEN + "Unclaimed this chunk from " + Main.nationsManager.getNationByID(player.getNationID()).getName());
+                        Main.nationsManager.getNationByID(player.getNationID()).decrementChunks();
+                        int chunkCost = (Main.nationsManager.chunkCost * Main.nationsManager.getNationByID(player.getNationID()).getNumChunks()) + Main.nationsManager.chunkCost;
+                        player.addMoney(chunkCost);
+                        sender.sendMessage(ChatColor.GREEN + "Unclaimed this chunk from " + Main.nationsManager.getNationByID(player.getNationID()).getName() + ". You received $" + chunkCost);
                         player.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), -1)); //update currentChunk
                         //update all villagers in the chunk
                         for (Entity entity : currentChunk.getEntities()) {

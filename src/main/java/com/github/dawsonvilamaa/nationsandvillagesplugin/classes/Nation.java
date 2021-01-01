@@ -14,6 +14,7 @@ public class Nation {
     private int id;
     private NationsPlayer owner;
     private int population;
+    private int chunks;
 
     /**
      * @param name
@@ -24,6 +25,7 @@ public class Nation {
         this.id = id;
         this.owner = Main.nationsManager.getPlayers().get(owner.getUniqueId());
         this.population = 0;
+        this.chunks = 0;
     }
 
     public Nation(JSONObject jsonNation) {
@@ -31,7 +33,7 @@ public class Nation {
         this.id = Integer.parseInt(jsonNation.get("id").toString());
         this.owner = Main.nationsManager.getPlayerByUUID(UUID.fromString(jsonNation.get("owner").toString()));
         this.population = Integer.parseInt(jsonNation.get("population").toString());
-        //villages
+        this.chunks = Integer.parseInt(jsonNation.get("chunks").toString());
     }
 
     /**
@@ -93,6 +95,21 @@ public class Nation {
     }
 
     /**
+     * @return chunks
+     */
+    public int getNumChunks() {
+        return this.chunks;
+    }
+
+    public void incrementChunks() {
+        this.chunks = this.chunks + 1;
+    }
+
+    public void decrementChunks() {
+        this.chunks = this.chunks - 1;
+    }
+
+    /**
      * Returns this Nation as a JSONObject
      * @return jsonNation
      */
@@ -102,10 +119,7 @@ public class Nation {
         jsonNation.put("id", String.valueOf(this.id));
         jsonNation.put("owner", this.owner.getUUID().toString());
         jsonNation.put("population", String.valueOf(this.population));
-        JSONArray jsonVillages = new JSONArray();
-        /*for (Village village : this.villages)
-            jsonVillages.add(String.valueOf(village.getID()));
-        jsonNation.put("villages", jsonVillages);*/
+        jsonNation.put("chunks", String.valueOf(this.chunks));
         return jsonNation;
     }
 }

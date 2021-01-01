@@ -18,8 +18,10 @@ public class NationsManager {
 
     public static String navDir = "plugins\\NationsAndVillages";
     private int nextNationID;
-    private int nextVillageID;
     private int nextVillagerID;
+
+    public static int startingMoney = 1000;
+    public static int chunkCost = 10;
 
     public NationsManager() {
         this.nations = new HashMap<Integer, Nation>();
@@ -27,7 +29,6 @@ public class NationsManager {
         this.players = new HashMap<UUID, NationsPlayer>();
         this.chunks = new ArrayList<NationsChunk>();
         this.nextNationID = -1;
-        this.nextVillageID = -1;
         this.nextVillagerID = -1;
     }
 
@@ -143,8 +144,9 @@ public class NationsManager {
      * Adds a player to the worldwide list
      * @param newPlayer
      */
-    public void addPlayer(Player newPlayer) {
+    public NationsPlayer addPlayer(Player newPlayer) {
         this.players.put(newPlayer.getUniqueId(), new NationsPlayer(newPlayer));
+        return this.players.get(newPlayer.getUniqueId());
     }
 
     /**
@@ -205,14 +207,6 @@ public class NationsManager {
     public int nextNationID() {
         this.nextNationID = this.nextNationID + 1;
         return this.nextNationID;
-    }
-
-    /**
-     * @return nextVillageID
-     */
-    public int nextVillageID() {
-        this.nextVillageID = this.nextVillageID + 1;
-        return this.nextVillageID;
     }
 
     /**

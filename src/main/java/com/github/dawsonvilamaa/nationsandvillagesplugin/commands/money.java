@@ -7,13 +7,10 @@ import org.bukkit.entity.Player;
 public class money implements Command {
     /**
      * @param sender
-     * @param cmd
      * @param args
-     * @return
      */
-    public static boolean run(Player sender, String cmd, String[] args) {
-        Player player = (Player) sender;
-        player.sendMessage(ChatColor.GREEN + "$" + Main.nationsManager.getPlayerByUUID(player.getUniqueId()).getMoney());
+    public static boolean run(Player sender, String[] args) {
+        sender.sendMessage(ChatColor.GREEN + "$" + Main.nationsManager.getPlayerByUUID(sender.getUniqueId()).getMoney());
         return true;
     }
 }
