@@ -27,11 +27,31 @@ commands:
     usage: /claim
     permission: NationsAndVillages.claim
     permission-message: You don't have permission to use that command
+  demote:
+    description: demotes a member of your nation to a lower rank
+    usage: /demote [player]
+    permission: NationsAndVillages.demote
+    permission-message: You don't have permission to use that command
+  exile:
+    description: removes a member from your nation
+    usage: /exile [player]
+    permission: NationsAndVillages.exile
+    permission-message: You don't have permission to use that command
+  invite:
+    description: invites a player to your nation
+    usage: /invite [player]
+    permission: NationsAndVillages.invite
+    permission-message: You don't have permission to use that command
   nation:
     aliases: nations
     description: creates a nation
-    usage: /nation [create | info] [name]
+    usage: /nation [create | info | join | leave | list | rename] [name]
     permission: NationsAndVillages.nation
+    permission-message: You don't have permission to use that command
+  promote:
+    description: promotes a member of your nation to a higher rank
+    usage: /promote [user]
+    permission: NationsAndVillages.promote
     permission-message: You don't have permission to use that command
   unclaim:
     description: unclaims a chunk from your nation

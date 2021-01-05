@@ -1,6 +1,8 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
+import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.demote;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.*;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -32,8 +34,28 @@ public class NAVCommandExecutor implements CommandExecutor {
                 case "claim":
                     return claim.run(cleanPlayer, args);
 
+                case "demote":
+                    return demote.run(cleanPlayer, args);
+
+                case "exile":
+                    return exile.run(cleanPlayer, args);
+
+                case "invite":
+                    try {
+                        return invite.run(cleanPlayer, args);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
                 case "nation":
-                    return nation.run(cleanPlayer, args);
+                    try {
+                        return nation.run(cleanPlayer, args);
+                    } catch (NationNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                case "promote":
+                    return promote.run(cleanPlayer, args);
 
                 case "unclaim":
                     return unclaim.run(cleanPlayer, args);

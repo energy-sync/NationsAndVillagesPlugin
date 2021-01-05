@@ -36,9 +36,14 @@ public class WorldListener implements Listener {
             EntityVillager villager = ((CraftVillager) e.getEntity()).getHandle();
             NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
             if (nationsVillager == null) {
-                Main.nationsManager.addVillager(villager.getUniqueID(), new NationsVillager(villager));
+                NationsVillager newNationsVillager = new NationsVillager(villager);
+                Main.nationsManager.addVillager(villager.getUniqueID(), newNationsVillager);
                 Chunk chunk = e.getLocation().getChunk();
-
+                NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ());
+                if (nationsChunk != null) {
+                    newNationsVillager.setNationID(nationsChunk.getNationID());
+                    Main.nationsManager.getNationByID(nationsChunk.getNationID()).incrementPopulation();
+                }
             }
         }
     }

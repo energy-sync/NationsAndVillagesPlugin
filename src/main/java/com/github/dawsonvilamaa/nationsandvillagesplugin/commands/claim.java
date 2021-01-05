@@ -23,10 +23,17 @@ public class claim implements Command {
 
         //check if player owns a nation
         if (player.getNationID() == -1) {
-            sender.sendMessage(ChatColor.RED + "You must own a nation to claim chunks");
+            sender.sendMessage(ChatColor.RED + "You must be in a nation to claim land");
             return true;
         }
         else {
+            Nation nation = Main.nationsManager.getNationByID(player.getNationID());
+            //check if player has permission to claim land
+            if (nation.getPermissionByRank(player.getRank()).canClaimLand() == false) {
+                sender.sendMessage(ChatColor.RED + "You do not have permission to claim land for your nation");
+                return true;
+            }
+
             Chunk currentChunk = sender.getLocation().getChunk();
             //check if chunk is already claimed
             for (NationsChunk chunk : Main.nationsManager.getChunks()) {
@@ -37,7 +44,6 @@ public class claim implements Command {
             }
 
             //check if player has enough money to buy a new chunk
-            Nation nation = Main.nationsManager.getNationByID(player.getNationID());
             int chunkCost = (nation.getNumChunks() * Main.nationsManager.chunkCost) + Main.nationsManager.chunkCost;
             if (player.getMoney() - chunkCost < 0) {
                 sender.sendMessage(ChatColor.RED + "You do not have enough money to purchase a new chunk. It costs $" + chunkCost);

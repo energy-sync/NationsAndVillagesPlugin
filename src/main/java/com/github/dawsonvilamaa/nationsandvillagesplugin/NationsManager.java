@@ -18,10 +18,16 @@ public class NationsManager {
 
     public static String navDir = "plugins\\NationsAndVillages";
     private int nextNationID;
-    private int nextVillagerID;
 
     public static int startingMoney = 1000;
     public static int chunkCost = 10;
+
+    public enum Rank {
+        LEADER,
+        LEGATE,
+        MEMBER,
+        NONMEMBER
+    }
 
     public NationsManager() {
         this.nations = new HashMap<Integer, Nation>();
@@ -29,7 +35,6 @@ public class NationsManager {
         this.players = new HashMap<UUID, NationsPlayer>();
         this.chunks = new ArrayList<NationsChunk>();
         this.nextNationID = -1;
-        this.nextVillagerID = -1;
     }
 
     /**
@@ -54,25 +59,10 @@ public class NationsManager {
     }
 
     /**
-     * Use this when loading data
-     * @param players
-     */
-    public void setPlayers(HashMap<UUID, NationsPlayer> players) {
-        this.players = players;
-    }
-
-    /**
      * @return chunks
      */
     public ArrayList<NationsChunk> getChunks() {
         return this.chunks;
-    }
-
-    /**
-     * @param chunks
-     */
-    public void setChunks(ArrayList<NationsChunk> chunks) {
-        this.chunks = chunks;
     }
 
     /**
@@ -88,10 +78,26 @@ public class NationsManager {
      * @param nationID
      * @throws NationNotFoundException
      */
-    public void removeNation(int nationID) throws NationNotFoundException {
-        Nation removedNation = this.nations.get(nationID);
-        if (removedNation == null) throw new NationNotFoundException();
-        else this.nations.remove(nationID);
+    public void removeNation(int nationID) {
+        //unclaim all chunks
+        for (int i = 0; i < this.chunks.size(); i++) {
+            if (this.chunks.get(i).getNationID() == nationID)
+                this.chunks.remove(this.chunks.get(i));
+        }
+        this.chunks.trimToSize();
+        //remove all members
+        for (NationsPlayer nationsPlayer : this.players.values()) {
+            if (nationsPlayer.getNationID() == nationID) {
+                nationsPlayer.setNationID(-1);
+                nationsPlayer.setRank(Rank.NONMEMBER);
+            }
+        }
+        //remove all villagers from nation
+        for (NationsVillager nationsVillager : this.villagers.values()) {
+            if (nationsVillager.getNationID() == nationID)
+                nationsVillager.setNationID(-1);
+        }
+        this.nations.remove(nationID);
     }
 
     /**
@@ -182,6 +188,7 @@ public class NationsManager {
             if (this.chunks.get(i).getX() == x && this.chunks.get(i).getZ() == y && this.chunks.get(i).getNationID() == nationID) {
                 this.chunks.remove(i);
                 this.chunks.trimToSize();
+                Bukkit.broadcastMessage("removed chunk");
             }
         }
     }
@@ -207,13 +214,5 @@ public class NationsManager {
     public int nextNationID() {
         this.nextNationID = this.nextNationID + 1;
         return this.nextNationID;
-    }
-
-    /**
-     * @return nextVillagerID
-     */
-    public int nextVillagerID() {
-        this.nextVillagerID = this.nextVillagerID + 1;
-        return this.nextVillagerID;
     }
 }

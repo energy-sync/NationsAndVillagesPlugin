@@ -38,7 +38,11 @@ public class Main extends JavaPlugin {
         getCommand("autounclaim").setExecutor(commandExecutor);
         getCommand("balance").setExecutor(commandExecutor);
         getCommand("claim").setExecutor(commandExecutor);
+        getCommand("demote").setExecutor(commandExecutor);
+        getCommand("exile").setExecutor(commandExecutor);
+        getCommand("invite").setExecutor(commandExecutor);
         getCommand("nation").setExecutor(commandExecutor);
+        getCommand("promote").setExecutor(commandExecutor);
         getCommand("unclaim").setExecutor(commandExecutor);
 
         //register events
