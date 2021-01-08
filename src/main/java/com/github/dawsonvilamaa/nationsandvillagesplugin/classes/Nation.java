@@ -180,6 +180,22 @@ public class Nation {
         }
     }
 
+    public void setPermissionByRank(NationsManager.Rank rank, NationsPermission perms) {
+        switch (rank) {
+            case LEGATE:
+                this.legatePermissions = perms;
+            break;
+
+            case MEMBER:
+                this.memberPermissions = perms;
+            break;
+
+            case NONMEMBER:
+                this.nonMemberPermissions = perms;
+            break;
+        }
+    }
+
     /**
      * @return invitedPlayers
      */

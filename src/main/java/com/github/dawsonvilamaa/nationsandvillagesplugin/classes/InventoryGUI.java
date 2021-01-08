@@ -26,6 +26,7 @@ public class InventoryGUI implements Listener, InventoryHolder {
     private ArrayList<InventoryGUIButton> buttons;
     private int slot;
     private int maxItems;
+    private HashMap<Integer, Consumer<InventoryClickEvent>> events;
 
     public InventoryGUI() {
 
@@ -46,6 +47,7 @@ public class InventoryGUI implements Listener, InventoryHolder {
         this.buttons = new ArrayList<>();
         this.slot = 0;
         this.maxItems = (9 * rows) - 1;
+        this.events = new HashMap<>();
         Bukkit.getPluginManager().registerEvents(this, Main.plugin);
     }
 
@@ -77,31 +79,28 @@ public class InventoryGUI implements Listener, InventoryHolder {
     }
 
     /**
-     * Adds an item to the inventory with a given name, description, and material. Also can attach an event to the button when clicked
-     * @param button
-     * @param consumer
-     * @return button
-     */
-    public InventoryGUIButton addButton(InventoryGUIButton button, Consumer<InventoryClickEvent> consumer) {
-        //create item
-        if (this.slot <= this.maxItems) {
-            this.inventory.setItem(slot, button.getItem());
-            this.slot++;
-            this.buttons.add(button);
-            Bukkit.getPluginManager().registerEvents(this, Bukkit.getPluginManager().getPlugin("NationsAndVillagesPlugin"));
-        }
-        return button;
-    }
-
-    /**
      * Adds an item to the inventory with a given name, description, and material. Multiple of the same item can be added using this method.
      * @param button
      * @param amount
      * @return
      */
-    public void addButton(InventoryGUIButton button, int amount) {
+    public void addButtons(InventoryGUIButton button, int amount) {
         for (int i = 0; i < amount; i++)
             addButton(button);
+    }
+
+    /**
+     * @return slot
+     */
+    public int getSlot() {
+        return this.slot;
+    }
+
+    /**
+     * @return events
+     */
+    public HashMap<Integer, Consumer<InventoryClickEvent>> getEvents() {
+        return this.events;
     }
 
     /**
@@ -119,15 +118,10 @@ public class InventoryGUI implements Listener, InventoryHolder {
             for (InventoryGUIButton button : this.buttons) {
                 if (button.getName().equals(e.getCurrentItem().getItemMeta().getDisplayName())) {
                     button.onClick(e);
+                    e.setCancelled(true);
                 }
             }
             e.setCancelled(true);
         }
-    }
-
-    @EventHandler
-    public void onClose(InventoryCloseEvent e) {
-        if (e.getPlayer().equals(this.player))
-            HandlerList.unregisterAll(this);
     }
 }

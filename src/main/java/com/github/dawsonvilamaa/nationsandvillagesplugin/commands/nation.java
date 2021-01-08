@@ -166,17 +166,7 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
                     return true;
                 }
-                //create menu
-                InventoryGUI gui = new InventoryGUI(player, "Ranks", 1);
-                InventoryGUIButton legateButton = new InventoryGUIButton(gui, "Legate", null, Material.DIAMOND);
-                legateButton.setOnClick(e -> {
-                    NationsPlayer player1 = nationsManager.getPlayerByUUID(e.getWhoClicked().getUniqueId());
-                    Bukkit.broadcastMessage(player1.getRank() == NationsManager.Rank.LEGATE ? "yes" : "no");
-                });
-                gui.addButton(legateButton);
-                gui.addButton(new InventoryGUIButton(gui, ChatColor.WHITE + "Member", null, Material.PLAYER_HEAD));
-                gui.addButton(new InventoryGUIButton(gui, "", "", Material.WHITE_STAINED_GLASS_PANE), 7);
-                gui.showMenu(player);
+                ranksMenu(player);
                 return true;
 
             case "rename":
@@ -211,5 +201,84 @@ public class nation implements Command {
                 return true;
         }
         return false;
+    }
+
+    //GUI to choose rank
+    private static void ranksMenu(Player player) {
+        InventoryGUI gui = new InventoryGUI(player, "Ranks", 1);
+        //legate
+        InventoryGUIButton legateButton = new InventoryGUIButton(gui, "Legate", null, Material.DIAMOND);
+        legateButton.setOnClick(e -> permsMenu(player, NationsManager.Rank.LEGATE));
+        gui.addButton(legateButton);
+        //member
+        InventoryGUIButton memberButton = new InventoryGUIButton(gui, ChatColor.WHITE + "Member", null, Material.PLAYER_HEAD);
+        memberButton.setOnClick(e -> permsMenu(player, NationsManager.Rank.MEMBER));
+        gui.addButton(memberButton);
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 7);
+        gui.showMenu(player);
+    }
+
+    //GUI to edit permissions for nation
+    private static void permsMenu(Player player, NationsManager.Rank rank) {
+        Nation nation = nationsManager.getNationByID(nationsManager.getPlayerByUUID(player.getUniqueId()).getNationID());
+        NationsPermission perms = nation.getPermissionByRank(rank);
+        InventoryGUI gui = new InventoryGUI(player, rank.toString() + " Permissions", 1);
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
+        //modify blocks
+        InventoryGUIButton modifyBlocksButton = new InventoryGUIButton(gui, "Place/Break Blocks", isAllowed(perms.canModifyBlocks()), Material.GRASS_BLOCK);
+        modifyBlocksButton.setOnClick(e -> {
+            if (perms.canModifyBlocks() == true)
+                perms.setModifyBlocks(false);
+            else perms.setModifyBlocks(true);
+            modifyBlocksButton.setDescription(isAllowed(perms.canModifyBlocks()));
+            nation.setPermissionByRank(rank, perms);
+        });
+        gui.addButton(modifyBlocksButton);
+        //open containers
+        InventoryGUIButton openContainersButton = new InventoryGUIButton(gui, "Open Containers", isAllowed(perms.canOpenContainers()), Material.CHEST);
+        openContainersButton.setOnClick(e -> {
+            if (perms.canOpenContainers() == true)
+                perms.setOpenContainers(false);
+            else perms.setOpenContainers(true);
+            openContainersButton.setDescription(isAllowed(perms.canOpenContainers()));
+            nation.setPermissionByRank(rank, perms);
+        });
+        gui.addButton(openContainersButton);
+        //attack peaceful mobs
+        InventoryGUIButton attackMobsButton = new InventoryGUIButton(gui, "Attack Peaceful Mobs", isAllowed(perms.canAttackEntities()), Material.GOLDEN_SWORD);
+        attackMobsButton.setOnClick(e -> {
+            if (perms.canAttackEntities() == true)
+                perms.setAttackEntities(false);
+            else perms.setAttackEntities(true);
+            attackMobsButton.setDescription(isAllowed(perms.canAttackEntities()));
+            nation.setPermissionByRank(rank, perms);
+        });
+        gui.addButton(attackMobsButton);
+        //claim land
+        InventoryGUIButton claimLandButton = new InventoryGUIButton(gui, "Claim Land", isAllowed(perms.canClaimLand()), Material.FILLED_MAP);
+        claimLandButton.setOnClick(e -> {
+            if (perms.canClaimLand() == true)
+                perms.setClaimLand(false);
+            else perms.setClaimLand(true);
+            claimLandButton.setDescription(isAllowed(perms.canClaimLand()));
+            nation.setPermissionByRank(rank, perms);
+        });
+        gui.addButton(claimLandButton);
+        //manage members
+        InventoryGUIButton manageMembersButton = new InventoryGUIButton(gui, "Manage Members", isAllowed(perms.canManageMembers()), Material.PLAYER_HEAD);
+        manageMembersButton.setOnClick(e -> {
+            if (perms.canManageMembers() == true)
+                perms.setManageMembers(false);
+            else perms.setManageMembers(true);
+            manageMembersButton.setDescription(isAllowed(perms.canClaimLand()));
+            nation.setPermissionByRank(rank, perms);
+        });
+        gui.addButton(manageMembersButton);
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
+        gui.showMenu(player);
+    }
+
+    private static String isAllowed(boolean perm) {
+        return perm ? ChatColor.GREEN + "ALLOWED" : ChatColor.RED + "DENIED";
     }
 }
