@@ -2,13 +2,13 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.NationsManager;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 
 import java.util.UUID;
 
@@ -20,7 +20,7 @@ public class nation implements Command {
      * @param player
      * @param args
      */
-    public static boolean run(Player player, String[] args) throws NationNotFoundException {
+    public static boolean run(Player player, String[] args) {
         if (args.length == 0) return false;
 
         NationsPlayer nationsPlayer = nationsManager.getPlayerByUUID(player.getUniqueId());
@@ -34,6 +34,7 @@ public class nation implements Command {
         switch (args[0]) {
             case "create":
                 if (args.length < 2) return false;
+                //check if player is in a nation
                 if (nationsPlayer.getNationID() != -1) {
                     player.sendMessage(ChatColor.RED + "You are already in a nation");
                     return true;
@@ -90,16 +91,19 @@ public class nation implements Command {
                 return true;
 
             case "leave":
+                //check if player is in a nation
                 if (nationsPlayer.getNationID() == -1) {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
+                //confirmation
                 if (args.length < 2) {
                     if (nationsPlayer.getRank() == NationsManager.Rank.LEADER)
                         player.sendMessage(ChatColor.RED + "WARNING: You are the leader of this nation. If you leave, it will be completely disbanded, and you will lose all your claimed land!");
                     player.sendMessage(ChatColor.RED + "Confirm that you want to leave this nation with: /nation leave [name]");
                     return true;
                 }
+                //leave nation
                 if (fullName.equals(nationsManager.getNationByID(nationsPlayer.getNationID()).getName())) {
                     nationsPlayer.setNationID(-1);
                     nation.decrementPopulation();
@@ -119,7 +123,10 @@ public class nation implements Command {
                 return true;
 
             case "info":
-                if (args.length < 2) return false;
+                if (args.length < 2) {
+                    if (nationsPlayer.getNationID() == -1) return false;
+                    nation = nationsManager.getNationByID(nationsPlayer.getNationID());
+                }
                 if (nation == null) player.sendMessage(ChatColor.RED + "No nation of that name exists");
                 else {
                     String legateStr = "";
@@ -144,6 +151,32 @@ public class nation implements Command {
                         + ChatColor.YELLOW + "\nLegates: " + ChatColor.WHITE + legateStr
                         + ChatColor.YELLOW + "\nMembers: " + ChatColor.WHITE + memberStr);
                 }
+                return true;
+
+            case "permissions":
+            case "perms":
+                //check if player is in a nation
+                if (nationsPlayer.getNationID() == -1) {
+                    player.sendMessage(ChatColor.RED + "You are not in a nation");
+                    return true;
+                }
+                //check if player has permission to edit permissions
+                nation = nationsManager.getNationByID(nationsPlayer.getNationID());
+                if (nation.getPermissionByRank(nationsPlayer.getRank()).canManageMembers() == false) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
+                    return true;
+                }
+                //create menu
+                InventoryGUI gui = new InventoryGUI(player, "Ranks", 1);
+                InventoryGUIButton legateButton = new InventoryGUIButton(gui, "Legate", null, Material.DIAMOND);
+                legateButton.setOnClick(e -> {
+                    NationsPlayer player1 = nationsManager.getPlayerByUUID(e.getWhoClicked().getUniqueId());
+                    Bukkit.broadcastMessage(player1.getRank() == NationsManager.Rank.LEGATE ? "yes" : "no");
+                });
+                gui.addButton(legateButton);
+                gui.addButton(new InventoryGUIButton(gui, ChatColor.WHITE + "Member", null, Material.PLAYER_HEAD));
+                gui.addButton(new InventoryGUIButton(gui, "", "", Material.WHITE_STAINED_GLASS_PANE), 7);
+                gui.showMenu(player);
                 return true;
 
             case "rename":

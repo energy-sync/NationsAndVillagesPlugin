@@ -1,13 +1,13 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.PlayerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.WorldListener;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONArray;
@@ -26,10 +26,12 @@ public class Main extends JavaPlugin {
     private NationsVillagerListener nationsVillagerListener = new NationsVillagerListener(this);
     private WorldListener worldListener = new WorldListener(this);
 
+    public static Main plugin;
     public static NationsManager nationsManager;
 
     @Override
     public void onEnable() {
+        plugin = this;
         nationsManager = new NationsManager();
 
         //register commands

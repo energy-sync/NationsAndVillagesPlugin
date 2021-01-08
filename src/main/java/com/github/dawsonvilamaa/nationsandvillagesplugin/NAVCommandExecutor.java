@@ -48,11 +48,7 @@ public class NAVCommandExecutor implements CommandExecutor {
                     }
 
                 case "nation":
-                    try {
-                        return nation.run(cleanPlayer, args);
-                    } catch (NationNotFoundException e) {
-                        e.printStackTrace();
-                    }
+                    return nation.run(cleanPlayer, args);
 
                 case "promote":
                     return promote.run(cleanPlayer, args);
