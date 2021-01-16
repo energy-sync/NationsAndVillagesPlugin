@@ -42,12 +42,10 @@ public class InventoryGUIButton {
             this.name = name;
             meta.setDisplayName(name);
         }
-        else this.name = "";
         if (description != null) {
             this.description = description;
             meta.setLore(Arrays.asList(description));
         }
-        else this.description = "";
         this.material = material;
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         newItem.setItemMeta(meta);
@@ -72,7 +70,7 @@ public class InventoryGUIButton {
         ItemMeta meta = this.item.getItemMeta();
         meta.setDisplayName(name);
         this.item.setItemMeta(meta);
-        this.parentGUI.getInventory().getContents()[this.slot] = this.item;
+        this.parentGUI.getInventory().setItem(this.slot, this.item);
     }
 
     /**
@@ -90,7 +88,7 @@ public class InventoryGUIButton {
         ItemMeta meta = this.item.getItemMeta();
         meta.setLore(Arrays.asList(description));
         this.item.setItemMeta(meta);
-        this.parentGUI.getInventory().getContents()[this.slot] = this.item;
+        this.parentGUI.getInventory().setItem(this.slot, this.item);
     }
 
     /**

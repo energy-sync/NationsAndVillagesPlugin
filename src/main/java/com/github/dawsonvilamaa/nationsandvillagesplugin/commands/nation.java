@@ -1,14 +1,11 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 
-import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.NationsManager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
 
 import java.util.UUID;
 
@@ -206,6 +203,7 @@ public class nation implements Command {
     //GUI to choose rank
     private static void ranksMenu(Player player) {
         InventoryGUI gui = new InventoryGUI(player, "Ranks", 1);
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 3);
         //legate
         InventoryGUIButton legateButton = new InventoryGUIButton(gui, "Legate", null, Material.DIAMOND);
         legateButton.setOnClick(e -> permsMenu(player, NationsManager.Rank.LEGATE));
@@ -214,7 +212,11 @@ public class nation implements Command {
         InventoryGUIButton memberButton = new InventoryGUIButton(gui, ChatColor.WHITE + "Member", null, Material.PLAYER_HEAD);
         memberButton.setOnClick(e -> permsMenu(player, NationsManager.Rank.MEMBER));
         gui.addButton(memberButton);
-        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 7);
+        //non member
+        InventoryGUIButton nonMemberButton = new InventoryGUIButton(gui, "Nonmember", null, Material.BARRIER);
+        nonMemberButton.setOnClick(e -> permsMenu(player, NationsManager.Rank.NONMEMBER));
+        gui.addButton(nonMemberButton);
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 3);
         gui.showMenu(player);
     }
 
@@ -223,9 +225,16 @@ public class nation implements Command {
         Nation nation = nationsManager.getNationByID(nationsManager.getPlayerByUUID(player.getUniqueId()).getNationID());
         NationsPermission perms = nation.getPermissionByRank(rank);
         InventoryGUI gui = new InventoryGUI(player, rank.toString() + " Permissions", 1);
-        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
+        //back button
+        InventoryGUIButton backButton = new InventoryGUIButton(gui, "Back", null, Material.ARROW);
+        backButton.setOnClick(e -> {
+            gui.removeAllClickEvents();
+            ranksMenu(player);
+        });
+        gui.addButton(backButton);
+        gui.addButton(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE));
         //modify blocks
-        InventoryGUIButton modifyBlocksButton = new InventoryGUIButton(gui, "Place/Break Blocks", isAllowed(perms.canModifyBlocks()), Material.GRASS_BLOCK);
+        InventoryGUIButton modifyBlocksButton = new InventoryGUIButton(gui, "Place/Break Blocks", isAllowed(perms.canModifyBlocks()), Material.IRON_PICKAXE);
         modifyBlocksButton.setOnClick(e -> {
             if (perms.canModifyBlocks() == true)
                 perms.setModifyBlocks(false);
@@ -255,7 +264,7 @@ public class nation implements Command {
         });
         gui.addButton(attackMobsButton);
         //claim land
-        InventoryGUIButton claimLandButton = new InventoryGUIButton(gui, "Claim Land", isAllowed(perms.canClaimLand()), Material.FILLED_MAP);
+        InventoryGUIButton claimLandButton = new InventoryGUIButton(gui, "Claim Land", isAllowed(perms.canClaimLand()), Material.GRASS_BLOCK);
         claimLandButton.setOnClick(e -> {
             if (perms.canClaimLand() == true)
                 perms.setClaimLand(false);
@@ -265,7 +274,7 @@ public class nation implements Command {
         });
         gui.addButton(claimLandButton);
         //manage members
-        InventoryGUIButton manageMembersButton = new InventoryGUIButton(gui, "Manage Members", isAllowed(perms.canManageMembers()), Material.PLAYER_HEAD);
+        InventoryGUIButton manageMembersButton = new InventoryGUIButton(gui, ChatColor.WHITE + "Manage Members", isAllowed(perms.canManageMembers()), Material.PLAYER_HEAD);
         manageMembersButton.setOnClick(e -> {
             if (perms.canManageMembers() == true)
                 perms.setManageMembers(false);

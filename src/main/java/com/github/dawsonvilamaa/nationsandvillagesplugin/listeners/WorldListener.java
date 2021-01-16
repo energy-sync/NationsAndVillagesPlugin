@@ -63,29 +63,28 @@ public class WorldListener implements Listener {
     //Replaces all already existing villagers with NationsVillagers when new chunks are loaded
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent e) {
-        if (e.isNewChunk() == true) {
-            for (Entity entity : e.getChunk().getEntities()) {
-                if (entity instanceof CraftVillager) {
-                    EntityVillager villager = ((CraftVillager) entity).getHandle();
-                    //add new villager if one with that UUID doesn't already exist
-                    if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()) == null)
-                        Main.nationsManager.addVillager(villager.getUniqueID(), new NationsVillager(villager));
-                    NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
-                    Chunk chunk = e.getChunk();
-                    NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ());
-                    //add villager to nation if it is in a claimed chunk
-                    if (nationsChunk != null) {
-                        if (nationsVillager.getNationID() == -1) {
-                            nationsVillager.setNationID(nationsChunk.getNationID());
-                            Main.nationsManager.getNationByID(nationsVillager.getNationID()).incrementPopulation();
-                        }
+        Bukkit.broadcastMessage("loading chunk");
+        for (Entity entity : e.getChunk().getEntities()) {
+            if (entity instanceof CraftVillager) {
+                EntityVillager villager = ((CraftVillager) entity).getHandle();
+                //add new villager if one with that UUID doesn't already exist
+                if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()) == null)
+                    Main.nationsManager.addVillager(villager.getUniqueID(), new NationsVillager(villager));
+                NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
+                Chunk chunk = e.getChunk();
+                NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ());
+                //add villager to nation if it is in a claimed chunk
+                if (nationsChunk != null) {
+                    if (nationsVillager.getNationID() == -1) {
+                        nationsVillager.setNationID(nationsChunk.getNationID());
+                        Main.nationsManager.getNationByID(nationsVillager.getNationID()).incrementPopulation();
                     }
-                    //remove villager from its nation if it is not in a claimed chunk
-                    else {
-                        if (nationsVillager.getNationID() != -1) {
-                            Main.nationsManager.getNationByID(nationsVillager.getNationID()).decrementPopulation();
-                            nationsVillager.setNationID(-1);
-                        }
+                }
+                //remove villager from its nation if it is not in a claimed chunk
+                else {
+                    if (nationsVillager.getNationID() != -1) {
+                        Main.nationsManager.getNationByID(nationsVillager.getNationID()).decrementPopulation();
+                        nationsVillager.setNationID(-1);
                     }
                 }
             }

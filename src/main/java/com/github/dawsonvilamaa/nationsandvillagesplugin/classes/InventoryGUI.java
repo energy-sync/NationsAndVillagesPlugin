@@ -111,17 +111,35 @@ public class InventoryGUI implements Listener, InventoryHolder {
         player.openInventory(this.inventory);
     }
 
+    /**
+     * Removes all click events from the buttons in this GUI
+     */
+    public void removeAllClickEvents() {
+        for (InventoryGUIButton button : this.buttons)
+            button.setOnClick(null);
+    }
+
+    //prevent players from taking items in GUI menus
     @EventHandler
     public void onItemClick(InventoryClickEvent e) {
         //check if item clicked is actually an item
         if (e.getWhoClicked().equals(this.player) && e.getCurrentItem() != null) {
             for (InventoryGUIButton button : this.buttons) {
-                if (button.getName().equals(e.getCurrentItem().getItemMeta().getDisplayName())) {
+                if (button.getName() != null && button.getName().equals(e.getCurrentItem().getItemMeta().getDisplayName())) {
                     button.onClick(e);
                     e.setCancelled(true);
                 }
             }
             e.setCancelled(true);
+        }
+    }
+
+    //remove all click events on buttons when the menu is closed
+    @EventHandler
+    public void onMenuClose(InventoryCloseEvent e) {
+        if (e.getView().getTitle().equals(this.name) && e.getPlayer().equals(this.player)) {
+            for (InventoryGUIButton button : this.buttons)
+                button.setOnClick(null);
         }
     }
 }
