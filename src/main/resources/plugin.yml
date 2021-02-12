@@ -59,3 +59,8 @@ commands:
     usage: /unclaim
     permission: NationsAndVillages.unclaim
     permission-message: You don't have permission to use that command
+  sell:
+    description: sell the item in your hand to give to a merchant
+    usage: /sell <price | cancel>
+    permission: NationsAndVillages.sell
+    permission-message: You don't have permission to use that command

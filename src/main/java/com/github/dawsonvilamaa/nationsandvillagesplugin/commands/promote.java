@@ -48,11 +48,11 @@ public class promote implements Command {
         }
         //promote player
         nationsPromotedPlayer.setRank(NationsManager.Rank.LEGATE);
-        Bukkit.getPlayer(nationsPromotedPlayer.getUUID()).sendMessage(ChatColor.GREEN + "You have been promoted from member to legate in " + nation.getName());
+        Bukkit.getPlayer(nationsPromotedPlayer.getUniqueID()).sendMessage(ChatColor.GREEN + "You have been promoted from member to legate in " + nation.getName());
         //send message to all members
         for (UUID uuid : nation.getMembers()) {
             Player msgPlayer = Bukkit.getPlayer(uuid);
-            if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(nationsPromotedPlayer.getUUID())))
+            if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(nationsPromotedPlayer.getUniqueID())))
                 msgPlayer.sendMessage(ChatColor.YELLOW + nationsPromotedPlayer.getName() + " has been promoted to legate");
         }
         return true;

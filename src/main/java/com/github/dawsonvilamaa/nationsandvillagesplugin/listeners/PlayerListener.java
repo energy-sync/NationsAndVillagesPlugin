@@ -5,7 +5,7 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.NationsManager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.claim;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.unclaim;
 import net.minecraft.server.v1_16_R3.EntityVillager;
@@ -13,18 +13,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_16_R3.entity.*;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
-import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 
@@ -51,24 +48,6 @@ public class PlayerListener implements Listener {
         //check if username changed
         if (!(nationsPlayer.getName().equals(e.getPlayer().getName())))
             nationsPlayer.setName(e.getPlayer().getName());
-    }
-
-    //used to get info from villager, for debugging user
-    @EventHandler
-    public void onNationsVillagerInteract(PlayerInteractEntityEvent e) {
-        if (e.getRightClicked() instanceof CraftVillager) {
-            EntityVillager villager = ((CraftVillager) e.getRightClicked()).getHandle();
-            if (e.getHand().equals(EquipmentSlot.HAND)) {
-                NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
-                String infoStr = ChatColor.YELLOW + "--------------------\n"
-                        + ChatColor.WHITE + nationsVillager.getName() + "\n"
-                        + ChatColor.YELLOW + "--------------------\n"
-                        + ChatColor.WHITE + "Nation: ";
-                if (nationsVillager.getNationID() != -1) infoStr += Main.nationsManager.getNationByID(nationsVillager.getNationID()).getName();
-                else infoStr += "none";
-                e.getPlayer().sendMessage(infoStr);
-            }
-        }
     }
 
     //detect when player enters and exits claimed chunks, auto claims and unclaims chunks if applicable

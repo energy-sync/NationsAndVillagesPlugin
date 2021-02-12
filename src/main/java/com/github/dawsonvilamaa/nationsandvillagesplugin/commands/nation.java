@@ -2,6 +2,8 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.NationsManager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -201,7 +203,7 @@ public class nation implements Command {
     }
 
     //GUI to choose rank
-    private static void ranksMenu(Player player) {
+    public static void ranksMenu(Player player) {
         InventoryGUI gui = new InventoryGUI(player, "Ranks", 1);
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 3);
         //legate
@@ -217,11 +219,11 @@ public class nation implements Command {
         nonMemberButton.setOnClick(e -> permsMenu(player, NationsManager.Rank.NONMEMBER));
         gui.addButton(nonMemberButton);
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 3);
-        gui.showMenu(player);
+        gui.showMenu();
     }
 
     //GUI to edit permissions for nation
-    private static void permsMenu(Player player, NationsManager.Rank rank) {
+    public static void permsMenu(Player player, NationsManager.Rank rank) {
         Nation nation = nationsManager.getNationByID(nationsManager.getPlayerByUUID(player.getUniqueId()).getNationID());
         NationsPermission perms = nation.getPermissionByRank(rank);
         InventoryGUI gui = new InventoryGUI(player, rank.toString() + " Permissions", 1);
@@ -284,10 +286,10 @@ public class nation implements Command {
         });
         gui.addButton(manageMembersButton);
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
-        gui.showMenu(player);
+        gui.showMenu();
     }
 
-    private static String isAllowed(boolean perm) {
+    public static String isAllowed(boolean perm) {
         return perm ? ChatColor.GREEN + "ALLOWED" : ChatColor.RED + "DENIED";
     }
 }

@@ -56,6 +56,9 @@ public class NAVCommandExecutor implements CommandExecutor {
                 case "unclaim":
                     return unclaim.run(cleanPlayer, args);
 
+                case "sell":
+                    return sell.run(cleanPlayer, args);
+
                 default:
                     return false;
             }

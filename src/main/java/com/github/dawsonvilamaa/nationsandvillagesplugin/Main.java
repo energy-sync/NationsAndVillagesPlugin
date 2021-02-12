@@ -1,13 +1,13 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.InventoryListener;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.PlayerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.WorldListener;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONArray;
@@ -25,9 +25,11 @@ public class Main extends JavaPlugin {
     private PlayerListener playerListener = new PlayerListener(this);
     private NationsVillagerListener nationsVillagerListener = new NationsVillagerListener(this);
     private WorldListener worldListener = new WorldListener(this);
+    private InventoryListener inventoryListener = new InventoryListener(this);
 
     public static Main plugin;
     public static NationsManager nationsManager;
+    public PluginManager pm = getServer().getPluginManager();
 
     @Override
     public void onEnable() {
@@ -45,13 +47,14 @@ public class Main extends JavaPlugin {
         getCommand("invite").setExecutor(commandExecutor);
         getCommand("nation").setExecutor(commandExecutor);
         getCommand("promote").setExecutor(commandExecutor);
+        getCommand("sell").setExecutor(commandExecutor);
         getCommand("unclaim").setExecutor(commandExecutor);
 
         //register events
-        PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(playerListener, this);
         pm.registerEvents(nationsVillagerListener, this);
         pm.registerEvents(worldListener, this);
+        pm.registerEvents(inventoryListener, this);
 
         //create data folder if it doesn't exist
         File dir = new File("plugins\\NationsAndVillages");
@@ -65,7 +68,7 @@ public class Main extends JavaPlugin {
             Iterator<JSONObject> iterator = jsonPlayers.iterator();
             while (iterator.hasNext()) {
                 NationsPlayer player = new NationsPlayer(iterator.next());
-                nationsManager.getPlayers().put(player.getUUID(), player);
+                nationsManager.getPlayers().put(player.getUniqueID(), player);
             }
 
             //load nations
@@ -79,7 +82,7 @@ public class Main extends JavaPlugin {
             iterator = jsonVillagers.iterator();
             while (iterator.hasNext()) {
                 NationsVillager nationsVillager = new NationsVillager(iterator.next());
-                nationsManager.addVillager(nationsVillager.getEntity().getUniqueID(), nationsVillager);
+                nationsManager.addVillager(nationsVillager);
             }
 
             //load chunks

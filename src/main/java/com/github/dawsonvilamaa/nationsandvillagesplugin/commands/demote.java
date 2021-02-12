@@ -54,11 +54,11 @@ public class demote implements Command {
         }
         //demote player
         nationsDemotedPlayer.setRank(NationsManager.Rank.MEMBER);
-        Bukkit.getPlayer(nationsDemotedPlayer.getUUID()).sendMessage(ChatColor.RED + "You have been demoted from legate to member rank in " + nation.getName());
+        Bukkit.getPlayer(nationsDemotedPlayer.getUniqueID()).sendMessage(ChatColor.RED + "You have been demoted from legate to member rank in " + nation.getName());
         //send message to all members
         for (UUID uuid : nation.getMembers()) {
             Player msgPlayer = Bukkit.getPlayer(uuid);
-            if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(nationsDemotedPlayer.getUUID())))
+            if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(nationsDemotedPlayer.getUniqueID())))
                 msgPlayer.sendMessage(ChatColor.YELLOW + nationsDemotedPlayer.getName() + " has been demoted to member");
         }
         return true;

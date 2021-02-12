@@ -2,6 +2,8 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.classes;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.NationsManager;
+import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
@@ -16,6 +18,7 @@ public class NationsPlayer {
     private NationsChunk currentChunk;
     private boolean autoClaim;
     private boolean autoUnclaim;
+    private UUID chosenMerchant;
 
     /**
      * @param player
@@ -63,7 +66,7 @@ public class NationsPlayer {
     /**
      * @return uuid
      */
-    public UUID getUUID() {
+    public UUID getUniqueID() {
         return this.uuid;
     }
 
@@ -81,6 +84,9 @@ public class NationsPlayer {
      */
     public int addMoney(int amount) {
         this.money += amount;
+        Player player = Bukkit.getPlayer(this.uuid);
+        if (player != null)
+            player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, 0.5f);
         return this.money;
     }
 

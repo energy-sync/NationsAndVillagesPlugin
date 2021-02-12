@@ -241,7 +241,7 @@ public class Nation {
         JSONObject jsonNation = new JSONObject();
         jsonNation.put("name", this.name);
         jsonNation.put("id", String.valueOf(this.id));
-        jsonNation.put("owner", this.owner.getUUID().toString());
+        jsonNation.put("owner", this.owner.getUniqueID().toString());
         JSONArray membersArray = new JSONArray();
         for (UUID member : this.members)
             membersArray.add(member.toString());

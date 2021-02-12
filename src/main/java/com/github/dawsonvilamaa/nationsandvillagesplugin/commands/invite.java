@@ -48,7 +48,7 @@ public class invite implements Command {
         }
         //check if player already has a pending invite
         for (UUID uuid : nation.getInvitedPlayers()) {
-            if (uuid.equals(nationsInvitedPlayer.getUUID())) {
+            if (uuid.equals(nationsInvitedPlayer.getUniqueID())) {
                 sender.sendMessage(ChatColor.RED + nationsInvitedPlayer.getName() + " already has a pending invite to " + nation.getName());
                 return true;
             }

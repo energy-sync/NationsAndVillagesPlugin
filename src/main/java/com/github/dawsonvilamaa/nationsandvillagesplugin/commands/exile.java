@@ -37,7 +37,7 @@ public class exile implements Command {
         }
         //check if player is trying to exile themselves
         NationsPlayer nationsExiledPlayer = Main.nationsManager.getPlayerByUUID(promotedPlayer.getUniqueId());
-        if (player.getUUID().equals(nationsExiledPlayer.getUUID())) {
+        if (player.getUniqueID().equals(nationsExiledPlayer.getUniqueID())) {
             sender.sendMessage(ChatColor.RED + "You cannot exile yourself from this nation. Use \"/nation leave\" instead.");
             return true;
         }
@@ -55,11 +55,11 @@ public class exile implements Command {
         nationsExiledPlayer.setNationID(-1);
         nationsExiledPlayer.setRank(NationsManager.Rank.NONMEMBER);
         nation.decrementPopulation();
-        Bukkit.getPlayer(nationsExiledPlayer.getUUID()).sendMessage(ChatColor.RED + "You have been exiled from " + nation.getName() + "!");
+        Bukkit.getPlayer(nationsExiledPlayer.getUniqueID()).sendMessage(ChatColor.RED + "You have been exiled from " + nation.getName() + "!");
         //send message to all members
         for (UUID uuid : nation.getMembers()) {
             Player msgPlayer = Bukkit.getPlayer(uuid);
-            if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(nationsExiledPlayer.getUUID())))
+            if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(nationsExiledPlayer.getUniqueID())))
                 msgPlayer.sendMessage(ChatColor.RED + nationsExiledPlayer.getName() + " has been exiled from " + nation.getName());
         }
         return true;

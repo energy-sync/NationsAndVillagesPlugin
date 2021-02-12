@@ -1,4 +1,4 @@
-package com.github.dawsonvilamaa.nationsandvillagesplugin.classes;
+package com.github.dawsonvilamaa.nationsandvillagesplugin.gui;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -8,7 +8,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Consumer;
 
-import java.awt.*;
 import java.util.Arrays;
 
 public class InventoryGUIButton {
@@ -19,15 +18,6 @@ public class InventoryGUIButton {
     private ItemStack item;
     private InventoryGUI parentGUI;
     private Consumer<InventoryClickEvent> onClick;
-
-    public InventoryGUIButton() {
-        this.name = null;
-        this.description = null;
-        this.material = null;
-        this.item = null;
-        this.parentGUI = null;
-        onClick = null;
-    }
 
     /**
      * @param parentGUI
@@ -125,6 +115,13 @@ public class InventoryGUIButton {
      */
     public void setOnClick(Consumer<InventoryClickEvent> consumer) {
         this.onClick = consumer;
+    }
+
+    /**
+     * @return onClick
+     */
+    public Consumer<InventoryClickEvent> getOnClick() {
+        return this.onClick;
     }
 
     /**

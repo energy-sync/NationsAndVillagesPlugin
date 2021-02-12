@@ -2,19 +2,24 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.VillageNotFoundException;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class NationsManager {
     private HashMap<Integer, Nation> nations;
     private HashMap<UUID, NationsVillager> villagers;
     private HashMap<UUID, NationsPlayer> players;
     private ArrayList<NationsChunk> chunks;
+    private HashMap<UUID, InventoryGUI> menus;
+    private HashMap<UUID, Map.Entry<ShopItem, ScheduledThreadPoolExecutor>> playersChoosingMerchants;
 
     public static String navDir = "plugins\\NationsAndVillages";
     private int nextNationID;
@@ -30,11 +35,13 @@ public class NationsManager {
     }
 
     public NationsManager() {
-        this.nations = new HashMap<Integer, Nation>();
-        this.villagers = new HashMap<UUID, NationsVillager>();
-        this.players = new HashMap<UUID, NationsPlayer>();
-        this.chunks = new ArrayList<NationsChunk>();
+        this.nations = new HashMap<>();
+        this.villagers = new HashMap<>();
+        this.players = new HashMap<>();
+        this.chunks = new ArrayList<>();
+        this.menus = new HashMap<>();
         this.nextNationID = -1;
+        this.playersChoosingMerchants = new HashMap<>();
     }
 
     /**
@@ -64,6 +71,8 @@ public class NationsManager {
     public ArrayList<NationsChunk> getChunks() {
         return this.chunks;
     }
+
+    //Nations
 
     /**
      * Adds a nation to the worldwide list
@@ -121,13 +130,15 @@ public class NationsManager {
         return null;
     }
 
+    //Villagers
+
     /**
-     * @param uuid
      * @param nationsVillager
      */
-    public void addVillager(UUID uuid, NationsVillager nationsVillager) {
-        this.villagers.put(uuid, nationsVillager);
+    public NationsVillager addVillager(NationsVillager nationsVillager) {
+        this.villagers.put(nationsVillager.getUniqueID(), nationsVillager);
         Bukkit.broadcastMessage("Villagers: " + this.villagers.values().size());
+        return getVillagerByUUID(nationsVillager.getUniqueID());
     }
 
     /**
@@ -146,6 +157,8 @@ public class NationsManager {
         return this.villagers.get(uuid);
     }
 
+    //Players
+
     /**
      * Adds a player to the worldwide list
      * @param newPlayer
@@ -162,10 +175,12 @@ public class NationsManager {
      */
     public NationsPlayer getPlayerByUUID(UUID uuid) {
         for (NationsPlayer player : this.players.values()) {
-            if (player.getUUID().equals(uuid)) return player;
+            if (player.getUniqueID().equals(uuid)) return player;
         }
         return null;
     }
+
+    //Chunks
 
     /**
      * Adds a claimed chunk to the worldwide list, saving its coordinates and the ID of the owning nation
@@ -175,22 +190,6 @@ public class NationsManager {
      */
     public void addChunk(int x, int y, int nationID) {
         this.chunks.add(new NationsChunk(x, y, nationID));
-    }
-
-    /**
-     * Unclaims a chunk and removes it from the worldwide list
-     * @param x
-     * @param y
-     * @param nationID
-     */
-    public void removeChunk(int x, int y, int nationID) {
-        for (int i = 0; i < this.chunks.size(); i++) {
-            if (this.chunks.get(i).getX() == x && this.chunks.get(i).getZ() == y && this.chunks.get(i).getNationID() == nationID) {
-                this.chunks.remove(i);
-                this.chunks.trimToSize();
-                Bukkit.broadcastMessage("removed chunk");
-            }
-        }
     }
 
     /**
@@ -204,6 +203,48 @@ public class NationsManager {
             if (chunk.getX() == x && chunk.getZ() == z) return chunk;
         }
         return null;
+    }
+
+    //Menus
+
+    /**
+     * Adds a menu to the manager
+     * @param playerUUID
+     * @param gui
+     */
+    public void addMenu(UUID playerUUID, InventoryGUI gui) {
+        this.menus.put(playerUUID, gui);
+    }
+
+    /**
+     * Removes a menu from the manager, call this when it is closed
+     * @param playerUUID
+     */
+    public void removeMenu(UUID playerUUID) {
+        this.menus.remove(playerUUID);
+    }
+
+    /**
+     * @param playerUUID
+     * @return
+     */
+    public InventoryGUI getMenuByPlayerUUID(UUID playerUUID) {
+        return this.menus.get(playerUUID);
+    }
+
+    /**
+     * @return playersChoosingMerchants
+     */
+    public HashMap<UUID, Map.Entry<ShopItem, ScheduledThreadPoolExecutor>> getPlayersChoosingMerchants() {
+        return this.playersChoosingMerchants;
+    }
+
+    /**
+     * @param uuid
+     * @return isPlayerChoosingMerchant
+     */
+    public boolean isPlayerChoosingMerchant(UUID uuid) {
+        return this.playersChoosingMerchants.get(uuid) == null ? false : true;
     }
 
     //IDs

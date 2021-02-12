@@ -1,22 +1,16 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.listeners;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsVillager;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import net.minecraft.server.v1_16_R3.EntityVillager;
-import net.minecraft.server.v1_16_R3.VillagerData;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
-import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 
 public class WorldListener implements Listener {
@@ -36,8 +30,8 @@ public class WorldListener implements Listener {
             EntityVillager villager = ((CraftVillager) e.getEntity()).getHandle();
             NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
             if (nationsVillager == null) {
-                NationsVillager newNationsVillager = new NationsVillager(villager);
-                Main.nationsManager.addVillager(villager.getUniqueID(), newNationsVillager);
+                NationsVillager newNationsVillager = new NationsVillager(villager.getUniqueID());
+                Main.nationsManager.addVillager(newNationsVillager);
                 Chunk chunk = e.getLocation().getChunk();
                 NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ());
                 if (nationsChunk != null) {
@@ -63,13 +57,12 @@ public class WorldListener implements Listener {
     //Replaces all already existing villagers with NationsVillagers when new chunks are loaded
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent e) {
-        Bukkit.broadcastMessage("loading chunk");
         for (Entity entity : e.getChunk().getEntities()) {
             if (entity instanceof CraftVillager) {
                 EntityVillager villager = ((CraftVillager) entity).getHandle();
                 //add new villager if one with that UUID doesn't already exist
                 if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()) == null)
-                    Main.nationsManager.addVillager(villager.getUniqueID(), new NationsVillager(villager));
+                    Main.nationsManager.addVillager(new NationsVillager(villager.getUniqueID()));
                 NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
                 Chunk chunk = e.getChunk();
                 NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ());
