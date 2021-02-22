@@ -4,10 +4,17 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.InventoryListener;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Merchant;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.PlayerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.WorldListener;
+import net.minecraft.server.v1_16_R3.EntityVillager;
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.World;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
+import org.bukkit.entity.Entity;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONArray;
@@ -56,9 +63,43 @@ public class Main extends JavaPlugin {
         pm.registerEvents(worldListener, this);
         pm.registerEvents(inventoryListener, this);
 
+        String savePath = "plugins\\NationsAndVillages\\";
         //create data folder if it doesn't exist
-        File dir = new File("plugins\\NationsAndVillages");
+        File dir = new File(savePath);
         if (!dir.exists()) dir.mkdir();
+
+        //create data files if they don't exist
+        try {
+            File playersFile = new File(savePath + "players.json");
+            if (playersFile.createNewFile()) {
+                FileWriter writer = new FileWriter(playersFile);
+                writer.write("[]");
+                writer.close();
+            }
+
+            File nationsFile = new File(savePath + "nations.json");
+            if (nationsFile.createNewFile()) {
+                FileWriter writer = new FileWriter(nationsFile);
+                writer.write("[]");
+                writer.close();
+            }
+
+            File villagersFile = new File(savePath + "villagers.json");
+            if (villagersFile.createNewFile()) {
+                FileWriter writer = new FileWriter(villagersFile);
+                writer.write("[]");
+                writer.close();
+            }
+
+            File chunksFile = new File(savePath + "chunks.json");
+            if (chunksFile.createNewFile()) {
+                FileWriter writer = new FileWriter(chunksFile);
+                writer.write("[]");
+                writer.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //load data
         JSONParser parser = new JSONParser();
@@ -81,8 +122,47 @@ public class Main extends JavaPlugin {
             JSONArray jsonVillagers = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\villagers.json"));
             iterator = jsonVillagers.iterator();
             while (iterator.hasNext()) {
-                NationsVillager nationsVillager = new NationsVillager(iterator.next());
+                JSONObject jsonVillager = iterator.next();
+                NationsVillager nationsVillager;
+                switch (NationsVillager.Job.valueOf(jsonVillager.get("job").toString())) {
+                    case MERCHANT:
+                        nationsVillager = new Merchant(jsonVillager);
+                    break;
+
+                    default:
+                        nationsVillager = new NationsVillager(jsonVillager);
+                }
                 nationsManager.addVillager(nationsVillager);
+            }
+
+            for (World world : Bukkit.getWorlds()) {
+                for (Chunk chunk : world.getLoadedChunks()) {
+                    for (Entity entity : chunk.getEntities()) {
+                        if (entity instanceof CraftVillager) {
+                            EntityVillager villager = ((CraftVillager) entity).getHandle();
+                            //add new villager if one with that UUID doesn't already exist
+                            if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()) == null) {
+                                Main.nationsManager.addVillager(new NationsVillager(villager.getUniqueID()));
+                            }
+                            NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
+                            NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ());
+                            //add villager to nation if it is in a claimed chunk
+                            if (nationsChunk != null) {
+                                if (nationsVillager.getNationID() == -1) {
+                                    nationsVillager.setNationID(nationsChunk.getNationID());
+                                    Main.nationsManager.getNationByID(nationsVillager.getNationID()).incrementPopulation();
+                                }
+                            }
+                            //remove villager from its nation if it is not in a claimed chunk
+                            else {
+                                if (nationsVillager.getNationID() != -1) {
+                                    Main.nationsManager.getNationByID(nationsVillager.getNationID()).decrementPopulation();
+                                    nationsVillager.setNationID(-1);
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             //load chunks
@@ -92,9 +172,9 @@ public class Main extends JavaPlugin {
                 nationsManager.getChunks().add(new NationsChunk(iterator.next()));
 
         } catch(IOException e) {
-            getLogger().info(e.getMessage());
+            getLogger().info("IOException: " + e.getMessage());
         } catch(ParseException ex) {
-            getLogger().info(ex.getMessage());
+            getLogger().info("ParseException: " + ex.getMessage());
         }
     }
 
@@ -110,13 +190,13 @@ public class Main extends JavaPlugin {
             playerFile = new FileWriter("plugins\\NationsAndVillages\\players.json");
             playerFile.write(jsonPlayers.toJSONString());
         } catch(IOException e) {
-            getLogger().info(e.getMessage());
+            getLogger().info("IOException: " + e.getMessage());
         } finally {
             try {
                 playerFile.flush();
                 playerFile.close();
             } catch (IOException ex) {
-                getLogger().info(ex.getMessage());
+                getLogger().info("IOException: " + ex.getMessage());
             }
         }
 
@@ -130,13 +210,13 @@ public class Main extends JavaPlugin {
             nationsFile = new FileWriter("plugins\\NationsAndVillages\\nations.json");
             nationsFile.write(jsonNations.toJSONString());
         } catch (IOException e) {
-            getLogger().info(e.getMessage());
+            getLogger().info("IOException: " + e.getMessage());
         } finally {
             try {
                 nationsFile.flush();
                 nationsFile.close();
             } catch(IOException e) {
-                getLogger().info(e.getMessage());
+                getLogger().info("IOException: " + e.getMessage());
             }
         }
 
@@ -150,13 +230,13 @@ public class Main extends JavaPlugin {
             villagersFile = new FileWriter("plugins\\NationsAndVillages\\villagers.json");
             villagersFile.write(jsonVillagers.toJSONString());
         } catch (IOException e) {
-            getLogger().info(e.getMessage());
+            getLogger().info("IOException: " + e.getMessage());
         } finally {
             try {
                 villagersFile.flush();
                 villagersFile.close();
             } catch (IOException e) {
-                getLogger().info(e.getMessage());
+                getLogger().info("IOException: " + e.getMessage());
             }
         }
 
@@ -170,13 +250,13 @@ public class Main extends JavaPlugin {
             chunksFile = new FileWriter("plugins\\NationsAndVillages\\chunks.json");
             chunksFile.write(jsonChunks.toJSONString());
         } catch (IOException e) {
-            getLogger().info(e.getMessage());
+            getLogger().info("IOException: " + e.getMessage());
         } finally {
             try {
                 chunksFile.flush();
                 chunksFile.close();
             } catch(IOException e) {
-                getLogger().info(e.getMessage());
+                getLogger().info("IOException: " + e.getMessage());
             }
         }
     }

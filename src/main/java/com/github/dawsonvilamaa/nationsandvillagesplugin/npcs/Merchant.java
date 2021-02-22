@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Player;
+import org.json.simple.JSONObject;
 
 import java.util.UUID;
 
@@ -18,16 +19,29 @@ public class Merchant extends NationsVillager {
     public Merchant(UUID merchantUUID, UUID ownerUUID) {
         super(merchantUUID);
         setName("Merchant");
-        setJob(Jobs.MERCHANT);
+        setJob(Job.MERCHANT);
         this.shop = new Shop(ownerUUID, getUniqueID());
         CraftVillager entity = (CraftVillager) Bukkit.getEntity(getUniqueID());
-        entity.setAI(false);
         setOnClick(e -> {
             NationsPlayer nationsPlayer = Main.nationsManager.getPlayerByUUID(e.getPlayer().getUniqueId());
             //check if player is the owner of the shop
             if (nationsPlayer.getUniqueID().equals(this.shop.getOwnerUUID())) {
                 merchantOptionsMenu(e.getPlayer());
             }
+            else shop.getInventoryGUI(e.getPlayer()).showMenu();
+        });
+    }
+
+    public Merchant(JSONObject jsonMerchant) {
+        super(jsonMerchant);
+        this.shop = new Shop((JSONObject) jsonMerchant.get("shop"));
+        setOnClick(e -> {
+            NationsPlayer nationsPlayer = Main.nationsManager.getPlayerByUUID(e.getPlayer().getUniqueId());
+            //check if player is the owner of the shop
+            if (nationsPlayer.getUniqueID().equals(this.shop.getOwnerUUID())) {
+                merchantOptionsMenu(e.getPlayer());
+            }
+            else shop.getInventoryGUI(e.getPlayer()).showMenu();
         });
     }
 

@@ -11,13 +11,13 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Shop.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\promote.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\NationsManager.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\gui\InventoryGUIButton.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\NationsVillager$Job.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\claim.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\sell.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\NationsVillager.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsChunk.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Nation.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\NationsVillagerListener.class
-com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\NationsVillager$Jobs.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\autoclaim.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\unclaim.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\Command.class
@@ -30,6 +30,7 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\NationsManager$Rank.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\money.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\NationsPlayerNotFoundException.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillagerNotFoundException.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\Main$1.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\gui\InventoryGUI.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsPermission$1.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsPlayer.class

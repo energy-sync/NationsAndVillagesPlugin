@@ -9,11 +9,10 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
 public class Shop {
     private UUID ownerUUID;
@@ -28,6 +27,19 @@ public class Shop {
         this.ownerUUID = ownerUUID;
         this.villagerUUID = villagerUUID;
         this.items = new ArrayList<>();
+    }
+
+    /**
+     * @param jsonShop
+     */
+    public Shop(JSONObject jsonShop) {
+        this.ownerUUID = UUID.fromString(jsonShop.get("ownerUUID").toString());
+        this.villagerUUID = UUID.fromString(jsonShop.get("villagerUUID").toString());
+        this.items = new ArrayList<>();
+        JSONArray jsonItems = (JSONArray) jsonShop.get("items");
+        Iterator<JSONObject> iterator = jsonItems.iterator();
+        while (iterator.hasNext())
+            this.items.add(new ShopItem(iterator.next()));
     }
 
     /**
@@ -87,20 +99,24 @@ public class Shop {
     public InventoryGUI getInventoryGUI(Player player) {
         this.items.removeAll(Collections.singleton(null));
         InventoryGUI gui = new InventoryGUI(player, "Shop", 6);
-        for (ShopItem item : this.items) {
-            InventoryGUIButton button = new InventoryGUIButton(gui, item.getItem().getItemMeta().getDisplayName(), ChatColor.GREEN + "$" + item.getPrice(), item.getMaterial());
-            button.getItem().setAmount(item.getAmount());
+        for (ShopItem shopItem : this.items) {
+            InventoryGUIButton button = new InventoryGUIButton(gui, shopItem.getItem().getItemMeta().getDisplayName(), ChatColor.GREEN + "$" + shopItem.getPrice(), shopItem.getMaterial());
+            button.getItem().addEnchantments(shopItem.getItem().getEnchantments());
+            button.getItem().setAmount(shopItem.getAmount());
             //owner button behavior
             if (player.getUniqueId().equals(this.getOwnerUUID())) {
                 button.setOnClick(e -> {
-                    manageItemMenu(player, item);
+                    manageItemMenu(player, shopItem);
                 });
             }
             //customer button behavior
             else {
                 button.setOnClick(e -> {
-                    Main.nationsManager.getPlayerByUUID(player.getUniqueId()).addMoney(item.getPrice());
-                    player.sendMessage(ChatColor.GREEN + "You have been paid $" + item.getPrice());
+                    if (Main.nationsManager.getPlayerByUUID(player.getUniqueId()).getMoney() < shopItem.getPrice()) {
+                        player.sendMessage(ChatColor.RED + "You do not have enough money to purchase this item");
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1.0f, 0.5f);
+                    }
+                    else confirmBuyMenu(player, shopItem);
                 });
             }
             gui.addButton(button);
@@ -118,9 +134,11 @@ public class Shop {
 
     //Menus
 
+    //GUI for removing an item from the shop
     public void manageItemMenu(Player player, ShopItem shopItem) {
         InventoryGUI gui = new InventoryGUI(player, "Remove Item From Shop?", 1);
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
+
         //cancel button
         InventoryGUIButton cancelButton = new InventoryGUIButton(gui, ChatColor.RED + "" + ChatColor.BOLD + "Cancel", null, Material.RED_STAINED_GLASS_PANE);
         cancelButton.setOnClick(e -> {
@@ -133,6 +151,7 @@ public class Shop {
         //item preview
         InventoryGUIButton previewButton = new InventoryGUIButton(gui, shopItem.getItem().getItemMeta().getDisplayName(), ChatColor.GREEN + "$" + shopItem.getPrice(), shopItem.getMaterial());
         previewButton.getItem().setAmount(shopItem.getAmount());
+        previewButton.getItem().addEnchantments(shopItem.getItem().getEnchantments());
         gui.addButton(previewButton);
 
         gui.addButton(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE));
@@ -152,5 +171,65 @@ public class Shop {
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
 
         gui.showMenu();
+    }
+
+    //GUI for confirming the purchase of an item
+    public void confirmBuyMenu(Player player, ShopItem shopItem) {
+        InventoryGUI gui = new InventoryGUI(player, "Confirm Purchase", 1);
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
+
+        //cancel button
+        InventoryGUIButton cancelButton = new InventoryGUIButton(gui, ChatColor.RED + "" + ChatColor.BOLD + "Cancel", null, Material.RED_STAINED_GLASS_PANE);
+        cancelButton.setOnClick(e -> {
+            getInventoryGUI(player).showMenu();
+        });
+        gui.addButton(cancelButton);
+
+        gui.addButton(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE));
+
+        //item preview
+        InventoryGUIButton previewButton = new InventoryGUIButton(gui, shopItem.getItem().getItemMeta().getDisplayName(), ChatColor.GREEN + "$" + shopItem.getPrice(), shopItem.getMaterial());
+        previewButton.getItem().setAmount(shopItem.getAmount());
+        previewButton.getItem().addEnchantments(shopItem.getItem().getEnchantments());
+        gui.addButton(previewButton);
+
+        gui.addButton(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE));
+
+        //confirm button
+        InventoryGUIButton confirmButton = new InventoryGUIButton(gui, ChatColor.GREEN + "" + ChatColor.BOLD + "Confirm", null, Material.LIME_STAINED_GLASS_PANE);
+        confirmButton.setOnClick(e -> {
+            ItemStack item = removeItem(shopItem);
+            if (item != null) {
+                player.getInventory().addItem(item);
+                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+                player.sendMessage(ChatColor.YELLOW + "You bought " + ChatColor.BOLD + shopItem.getAmount() + "x " + shopItem.getMaterial().name() + ChatColor.RESET + ChatColor.YELLOW + " for " + ChatColor.BOLD + "$" + shopItem.getPrice());
+                player.closeInventory();
+                Main.nationsManager.getPlayerByUUID(player.getUniqueId()).removeMoney(shopItem.getPrice());
+                Main.nationsManager.getPlayerByUUID(shopItem.getSellerUUID()).addMoney(shopItem.getPrice());
+                Player seller = Bukkit.getPlayer(shopItem.getSellerUUID());
+                if (seller != null)
+                    seller.sendMessage(ChatColor.GREEN + player.getName() + " bought " + ChatColor.BOLD + shopItem.getAmount() + "x " + shopItem.getMaterial().name() + ChatColor.RESET + ChatColor.GREEN + " for " + ChatColor.BOLD + "$" + shopItem.getPrice());
+            }
+        });
+        gui.addButton(confirmButton);
+
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
+
+        gui.showMenu();
+    }
+
+    /**
+     * Returns this Shop in JSON format
+     * @return jsonShop
+     */
+    public JSONObject toJSON() {
+        JSONObject jsonShop = new JSONObject();
+        jsonShop.put("ownerUUID", this.ownerUUID.toString());
+        jsonShop.put("villagerUUID", this.villagerUUID.toString());
+        JSONArray jsonItems = new JSONArray();
+        for (ShopItem shopItem : this.items)
+            jsonItems.add(shopItem.toJSON());
+        jsonShop.put("items", jsonItems);
+        return jsonShop;
     }
 }

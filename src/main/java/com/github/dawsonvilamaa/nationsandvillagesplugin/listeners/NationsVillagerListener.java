@@ -117,13 +117,13 @@ public class NationsVillagerListener implements Listener {
                 }
 
                 //assign job menu if player is in same nation
-                else if (nationsVillager.getNationID() == nationsPlayer.getNationID() && craftVillager.getProfession() == Villager.Profession.NONE) {
+                else if (nationsPlayer.getNationID() != -1 && nationsVillager.getNationID() == nationsPlayer.getNationID() && craftVillager.getProfession() == Villager.Profession.NONE) {
                     e.setCancelled(true);
                     assignJobMenu(e);
                 }
 
                 //other cases of custom interact event
-                else if ((nationsVillager.getJob() != NationsVillager.Jobs.NONE && nationsVillager.getOnClick() != null) || doOnClick)
+                else if ((nationsVillager.getJob() != NationsVillager.Job.NONE && nationsVillager.getOnClick() != null) || doOnClick)
                     doOnClick(e);
             }
         }
@@ -153,6 +153,9 @@ public class NationsVillagerListener implements Listener {
         Player player = e.getPlayer();
         NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(e.getRightClicked().getUniqueId());
         InventoryGUI gui = new InventoryGUI(player, "Assign Job to " + nationsVillager.getName(), 1);
+
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
+
         //merchant button
         InventoryGUIButton merchantButton = new InventoryGUIButton(gui, "Merchant", "Sell items to other players through a merchant", Material.EMERALD);
         merchantButton.setOnClick(f -> {
@@ -192,7 +195,7 @@ public class NationsVillagerListener implements Listener {
         });
         gui.addButton(guardButton);
 
-        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 4);
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
         gui.showMenu();
     }
 }

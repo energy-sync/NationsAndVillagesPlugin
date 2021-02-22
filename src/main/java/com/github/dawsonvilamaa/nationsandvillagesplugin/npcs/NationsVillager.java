@@ -14,10 +14,10 @@ public class NationsVillager {
     private String name;
     private UUID uuid;
     private int nationID;
-    private Jobs job;
+    private Job job;
     private Consumer<PlayerInteractEntityEvent> onClick;
 
-    public enum Jobs {
+    public enum Job {
       NONE,
         MERCHANT,
         MINER,
@@ -34,7 +34,7 @@ public class NationsVillager {
         this.name = "Villager";
         this.uuid = uuid;
         this.nationID = -1;
-        this.job = Jobs.NONE;
+        this.job = Job.NONE;
         this.onClick = null;
     }
 
@@ -45,7 +45,7 @@ public class NationsVillager {
         this.uuid = UUID.fromString(jsonVillager.get("uuid").toString());
         this.name = jsonVillager.get("name").toString();
         this.nationID = Integer.parseInt(jsonVillager.get("nationID").toString());
-        this.job = Jobs.valueOf(jsonVillager.get("job").toString());
+        this.job = Job.valueOf(jsonVillager.get("job").toString());
         this.onClick = null;
     }
 
@@ -88,14 +88,14 @@ public class NationsVillager {
     /**
      * @return job
      */
-    public Jobs getJob() {
+    public Job getJob() {
         return this.job;
     }
 
     /**
      * @param job
      */
-    public void setJob(Jobs job) {
+    public void setJob(Job job) {
         this.job = job;
     }
 
@@ -140,12 +140,18 @@ public class NationsVillager {
         }
     }
 
+    /**
+     * Returns this NationsVillager in JSON format
+     * @return jsonVillager
+     */
     public JSONObject toJSON() {
         JSONObject jsonVillager = new JSONObject();
         jsonVillager.put("uuid", this.uuid.toString());
         jsonVillager.put("name", this.name);
         jsonVillager.put("nationID", String.valueOf(this.nationID));
         jsonVillager.put("job", this.job.toString());
+        if (this.job == Job.MERCHANT)
+            jsonVillager.put("shop", ((Merchant) this).getShop().toJSON());
         return jsonVillager;
     }
 }
