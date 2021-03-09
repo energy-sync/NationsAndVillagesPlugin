@@ -5,15 +5,18 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.ShopItem;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Lumberjack;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Merchant;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import net.minecraft.server.v1_16_R3.EntityVillager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftZombie;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
@@ -116,8 +119,8 @@ public class NationsVillagerListener implements Listener {
                     else doOnClick(e);
                 }
 
-                //assign job menu if player is in same nation
-                else if (nationsPlayer.getNationID() != -1 && nationsVillager.getNationID() == nationsPlayer.getNationID() && craftVillager.getProfession() == Villager.Profession.NONE) {
+                //assign job menu if player is in same nation and does not have a job
+                else if (nationsPlayer.getNationID() != -1 && nationsVillager.getNationID() == nationsPlayer.getNationID() && craftVillager.getProfession() == Villager.Profession.NONE && nationsVillager.getJob() == NationsVillager.Job.NONE) {
                     e.setCancelled(true);
                     assignJobMenu(e);
                 }
@@ -132,12 +135,19 @@ public class NationsVillagerListener implements Listener {
     //drops all items if villager is a merchant
     @EventHandler
     public void onDeath(EntityDeathEvent e) {
-        if (e.getEntity() instanceof CraftVillager) {
-            EntityVillager villager = ((CraftVillager) e.getEntity()).getHandle();
+        Entity entity = e.getEntity();
+        if (entity instanceof CraftVillager) {
+            EntityVillager villager = ((CraftVillager) entity).getHandle();
             NationsVillager nationsVillager = Main.nationsManager.getVillagers().get(villager.getUniqueID());
             if (nationsVillager instanceof Merchant) {
-                for (ShopItem shopItem : ((Merchant) nationsVillager).getShop().getItems()) {
-                    e.getEntity().getWorld().dropItemNaturally(e.getEntity().getLocation(), shopItem.getItem());
+                for (ShopItem shopItem : ((Merchant) nationsVillager).getShop().getItems())
+                    entity.getWorld().dropItemNaturally(entity.getLocation(), shopItem.getItem());
+            }
+            else if (nationsVillager instanceof Lumberjack) {
+                ((Lumberjack) nationsVillager).stopJob();
+                for (ItemStack item : ((Lumberjack) nationsVillager).getInventory().getContents()) {
+                    if (item != null)
+                        entity.getWorld().dropItemNaturally(entity.getLocation(), item);
                 }
             }
         }
@@ -149,7 +159,7 @@ public class NationsVillagerListener implements Listener {
     }
 
     //GUI for assigning a job to a villager
-    public void assignJobMenu(PlayerInteractEntityEvent e) {
+    public static void assignJobMenu(PlayerInteractEntityEvent e) {
         Player player = e.getPlayer();
         NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(e.getRightClicked().getUniqueId());
         InventoryGUI gui = new InventoryGUI(player, "Assign Job to " + nationsVillager.getName(), 1);
@@ -159,18 +169,27 @@ public class NationsVillagerListener implements Listener {
         //merchant button
         InventoryGUIButton merchantButton = new InventoryGUIButton(gui, "Merchant", "Sell items to other players through a merchant", Material.EMERALD);
         merchantButton.setOnClick(f -> {
-            Main.nationsManager.getVillagers().put(nationsVillager.getUniqueID(), new Merchant(nationsVillager.getUniqueID(), player.getUniqueId()));
-            player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, 0.7f);
-            player.sendMessage(ChatColor.GREEN + "Assigned this villager to be a merchant");
-            player.sendMessage(ChatColor.GREEN + "Use /sell to sell items through merchants");
-            player.closeInventory();
+            if (nationsVillager.getJob() != NationsVillager.Job.MERCHANT) {
+                endJob(nationsVillager);
+                Main.nationsManager.getVillagers().put(nationsVillager.getUniqueID(), new Merchant(nationsVillager.getUniqueID(), player.getUniqueId()));
+                player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, 0.7f);
+                player.sendMessage(ChatColor.GREEN + "Assigned this villager to be a merchant");
+                player.sendMessage(ChatColor.GREEN + "Use /sell to sell items through merchants");
+                player.closeInventory();
+            }
         });
         gui.addButton(merchantButton);
 
         //lumberjack button
         InventoryGUIButton lumberjackButton = new InventoryGUIButton(gui, "Lumberjack", "Gets wood from nearby trees", Material.IRON_AXE);
         lumberjackButton.setOnClick(f -> {
-
+            if (nationsVillager.getJob() != NationsVillager.Job.LUMBERJACK) {
+                endJob(nationsVillager);
+                Main.nationsManager.getVillagers().put(nationsVillager.getUniqueID(), new Lumberjack(nationsVillager.getUniqueID(), nationsVillager.getNationID()));
+                player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, 0.7f);
+                player.sendMessage(ChatColor.GREEN + "Assigned this villager to be a lumberjack");
+                player.closeInventory();
+            }
         });
         gui.addButton(lumberjackButton);
 
@@ -197,5 +216,24 @@ public class NationsVillagerListener implements Listener {
 
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
         gui.showMenu();
+    }
+
+    /**
+     * Makes villager drop all items in its inventory if it has any and stops villager from doing its job
+     * @param nationsVillager
+     */
+    private static void endJob(NationsVillager nationsVillager) {
+        Entity entity = Bukkit.getEntity(nationsVillager.getUniqueID());
+        if (nationsVillager.getJob() == NationsVillager.Job.MERCHANT) {
+            for (ShopItem shopItem : ((Merchant) nationsVillager).getShop().getItems())
+                entity.getWorld().dropItemNaturally(entity.getLocation(), shopItem.getItem());
+        }
+        else if (nationsVillager.getJob() == NationsVillager.Job.LUMBERJACK) {
+            Lumberjack lumberjack = ((Lumberjack) nationsVillager);
+            lumberjack.stopJob();
+            for (ItemStack item : lumberjack.getInventory().getContents())
+                if (item != null)
+                    entity.getWorld().dropItemNaturally(entity.getLocation(), item);
+        }
     }
 }

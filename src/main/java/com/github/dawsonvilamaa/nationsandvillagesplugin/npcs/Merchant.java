@@ -5,10 +5,10 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Shop;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
-import org.bukkit.Bukkit;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.json.simple.JSONObject;
 
 import java.util.UUID;
@@ -19,15 +19,14 @@ public class Merchant extends NationsVillager {
     public Merchant(UUID merchantUUID, UUID ownerUUID) {
         super(merchantUUID);
         setName("Merchant");
+        setNationID(Main.nationsManager.getPlayerByUUID(ownerUUID).getNationID());
         setJob(Job.MERCHANT);
         this.shop = new Shop(ownerUUID, getUniqueID());
-        CraftVillager entity = (CraftVillager) Bukkit.getEntity(getUniqueID());
         setOnClick(e -> {
             NationsPlayer nationsPlayer = Main.nationsManager.getPlayerByUUID(e.getPlayer().getUniqueId());
             //check if player is the owner of the shop
-            if (nationsPlayer.getUniqueID().equals(this.shop.getOwnerUUID())) {
-                merchantOptionsMenu(e.getPlayer());
-            }
+            if (nationsPlayer.getUniqueID().equals(this.shop.getOwnerUUID()))
+                merchantOptionsMenu(e.getPlayer(), e);
             else shop.getInventoryGUI(e.getPlayer()).showMenu();
         });
     }
@@ -38,9 +37,8 @@ public class Merchant extends NationsVillager {
         setOnClick(e -> {
             NationsPlayer nationsPlayer = Main.nationsManager.getPlayerByUUID(e.getPlayer().getUniqueId());
             //check if player is the owner of the shop
-            if (nationsPlayer.getUniqueID().equals(this.shop.getOwnerUUID())) {
-                merchantOptionsMenu(e.getPlayer());
-            }
+            if (nationsPlayer.getUniqueID().equals(this.shop.getOwnerUUID()))
+                merchantOptionsMenu(e.getPlayer(), e);
             else shop.getInventoryGUI(e.getPlayer()).showMenu();
         });
     }
@@ -55,20 +53,20 @@ public class Merchant extends NationsVillager {
     //Menus
 
     //GUI for manage existing items in the shop or assigning the villager a different job
-    public void merchantOptionsMenu(Player player) {
+    public void merchantOptionsMenu(Player player, PlayerInteractEntityEvent e) {
         InventoryGUI gui = new InventoryGUI(player, "Merchant Options", 1);
 
         //manage shop items button
         InventoryGUIButton manageShopButton = new InventoryGUIButton(gui, "Manage Shop Items", "Edit prices or remove items from the shop", Material.CHEST);
-        manageShopButton.setOnClick(e -> {
+        manageShopButton.setOnClick(f -> {
             this.shop.getInventoryGUI(player).showMenu();
         });
         gui.addButton(manageShopButton);
 
         //assign job button
         InventoryGUIButton assignJobButton = new InventoryGUIButton(gui, "Assign Job", null, Material.IRON_PICKAXE);
-        assignJobButton.setOnClick(e -> {
-            Bukkit.broadcastMessage("clicked on assign job");
+        assignJobButton.setOnClick(f -> {
+            NationsVillagerListener.assignJobMenu(e);
         });
         gui.addButton(assignJobButton);
 

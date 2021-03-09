@@ -4,6 +4,7 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.InventoryListener;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Lumberjack;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Merchant;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
@@ -118,6 +119,12 @@ public class Main extends JavaPlugin {
             while (iterator.hasNext())
                 nationsManager.addNation(new Nation(iterator.next()));
 
+            //load chunks
+            JSONArray jsonChunks = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\chunks.json"));
+            iterator = jsonChunks.iterator();
+            while (iterator.hasNext())
+                nationsManager.getChunks().add(new NationsChunk(iterator.next()));
+
             //load villagers
             JSONArray jsonVillagers = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\villagers.json"));
             iterator = jsonVillagers.iterator();
@@ -127,6 +134,10 @@ public class Main extends JavaPlugin {
                 switch (NationsVillager.Job.valueOf(jsonVillager.get("job").toString())) {
                     case MERCHANT:
                         nationsVillager = new Merchant(jsonVillager);
+                    break;
+
+                    case LUMBERJACK:
+                        nationsVillager = new Lumberjack(jsonVillager);
                     break;
 
                     default:
@@ -164,12 +175,6 @@ public class Main extends JavaPlugin {
                     }
                 }
             }
-
-            //load chunks
-            JSONArray jsonChunks = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\chunks.json"));
-            iterator = jsonChunks.iterator();
-            while (iterator.hasNext())
-                nationsManager.getChunks().add(new NationsChunk(iterator.next()));
 
         } catch(IOException e) {
             getLogger().info("IOException: " + e.getMessage());

@@ -2,10 +2,12 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.npcs;
 
 import net.minecraft.server.v1_16_R3.ChatComponentText;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.util.Consumer;
+import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 
 import java.util.UUID;
@@ -46,7 +48,9 @@ public class NationsVillager {
         this.name = jsonVillager.get("name").toString();
         this.nationID = Integer.parseInt(jsonVillager.get("nationID").toString());
         this.job = Job.valueOf(jsonVillager.get("job").toString());
-        this.onClick = null;
+        setOnClick(e -> {
+            Bukkit.broadcastMessage(this.getJob().toString());
+        });
     }
 
     /**
@@ -141,6 +145,14 @@ public class NationsVillager {
     }
 
     /**
+     * Makes the villager walk to a location
+     * @param location
+     */
+    public boolean walkToLocation(Location location) {
+        return ((CraftVillager) Bukkit.getEntity(this.uuid)).getHandle().getNavigation().a(location.getX(), location.getY(), location.getZ(), 0.6);
+    }
+
+    /**
      * Returns this NationsVillager in JSON format
      * @return jsonVillager
      */
@@ -152,6 +164,8 @@ public class NationsVillager {
         jsonVillager.put("job", this.job.toString());
         if (this.job == Job.MERCHANT)
             jsonVillager.put("shop", ((Merchant) this).getShop().toJSON());
+        else if (this.job == Job.LUMBERJACK)
+            jsonVillager.put("inventory", ((Lumberjack) this).inventoryToJSON());
         return jsonVillager;
     }
 }

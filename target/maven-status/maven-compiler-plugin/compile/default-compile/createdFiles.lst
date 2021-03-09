@@ -19,6 +19,8 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsChunk.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Nation.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\NationsVillagerListener.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\autoclaim.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Lumberjack$1$1.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Lumberjack$2.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\unclaim.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\Command.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsPermission.class
@@ -33,6 +35,8 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillagerNotFoundExc
 com\github\dawsonvilamaa\nationsandvillagesplugin\Main$1.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\gui\InventoryGUI.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsPermission$1.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Lumberjack.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsPlayer.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\exile.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Lumberjack$1.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\invite.class
