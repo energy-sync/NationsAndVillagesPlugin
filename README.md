@@ -16,7 +16,7 @@ Version 1.16.4
   1. Miner
   1. Guard
   1. Farmer
-  1. Lumberjack
+  1. Lumberjack - Complete
 
 ## Videos
 Note: These videos were made during development.
@@ -34,3 +34,7 @@ Note: These videos were made during development.
 ### Merchant
 
 [![Nations and Villages Plugin - Merchants](http://img.youtube.com/vi/cBXJ9Sj9XLo/0.jpg)](http://www.youtube.com/watch?v=cBXJ9Sj9XLo "Nations and Villages Plugin - Merchants")
+
+### Lumberjack
+
+[![Nations and Villagers - Lumberjacks](http://img.youtube.com/vi/BknNogFoOiU/0.jpg)](http://www.youtube.com/watch?v=BknNogFoOiU "Nations and Villagers - Lumberjacks")
