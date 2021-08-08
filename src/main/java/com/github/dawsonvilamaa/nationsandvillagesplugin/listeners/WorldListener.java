@@ -49,6 +49,7 @@ public class WorldListener implements Listener {
         if (e.getEntity() instanceof CraftVillager) {
             EntityVillager villager = ((CraftVillager) e.getEntity()).getHandle();
             NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
+            nationsVillager.updateHealthTag(0, villager.getMaxHealth());
             if (Main.nationsManager.getNationByID(nationsVillager.getNationID()) != null)
                 Main.nationsManager.getNationByID(nationsVillager.getNationID()).decrementPopulation();
             Main.nationsManager.removeVillager(villager.getUniqueID());

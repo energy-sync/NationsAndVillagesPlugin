@@ -93,7 +93,7 @@ public class Lumberjack extends NationsVillager {
     }
 
     /**
-     * Start's the lumberjack's job of chopping down all trees within RADIUS blocks
+     * Starts the lumberjack's job of chopping down all trees within RADIUS blocks
      */
     public void startJob() {
         this.runnable = new BukkitRunnable() {
@@ -209,7 +209,7 @@ public class Lumberjack extends NationsVillager {
                     }
                 }
             }
-        }.runTaskTimer(Main.plugin, 20, 20);
+        }.runTaskTimer(Main.plugin, 20, 5);
     }
 
     /**
@@ -217,6 +217,10 @@ public class Lumberjack extends NationsVillager {
      */
     public void stopJob() {
         this.runnable.cancel();
+        Entity entity = Bukkit.getEntity(getUniqueID());
+        for (ItemStack item : this.inventory.getContents())
+            if (item != null)
+                entity.getWorld().dropItemNaturally(entity.getLocation(), item);
     }
 
     /**
@@ -295,7 +299,7 @@ public class Lumberjack extends NationsVillager {
 
     //GUI for opening lumberjack's inventory or assigning the villager a different job
     public void lumberjackOptionsMenu(Player player, PlayerInteractEntityEvent e) {
-        InventoryGUI gui = new InventoryGUI(player, "Lumberjack Options", 1);
+        InventoryGUI gui = new InventoryGUI(player, "Lumberjack Options", 1, true);
 
         //open inventory button
         InventoryGUIButton openInventoryButton = new InventoryGUIButton(gui, "Open inventory", null, Material.CHEST);

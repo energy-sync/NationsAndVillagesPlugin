@@ -2,12 +2,17 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.npcs;
 
 import net.minecraft.server.v1_16_R3.ChatComponentText;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Consumer;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.UUID;
@@ -153,6 +158,42 @@ public class NationsVillager {
     }
 
     /**
+     * Makes the villager run to a location
+     * @param location
+     * @return
+     */
+    public boolean runToLocation(Location location) {
+        return ((CraftVillager) Bukkit.getEntity(this.uuid)).getHandle().getNavigation().a(location.getX(), location.getY(), location.getZ(), 0.8);
+    }
+
+    /**
+     * Displays the villager's health as a custom name tag if the health is below its max health. Displays name if healed
+     */
+    public void updateHealthTag() {
+        CraftVillager villager = (CraftVillager) Bukkit.getEntity(this.uuid);
+        if (villager.getHealth() < villager.getMaxHealth() - 0.5) {
+            ((CraftVillager) Bukkit.getEntity(this.uuid)).getHandle().setCustomName(new ChatComponentText(ChatColor.RED + "❤ " + ChatColor.RESET + (int) Math.round(villager.getHealth()) + "/" + (int) villager.getMaxHealth()));
+            villager.setCustomNameVisible(true);
+        }
+        else {
+            setName(this.name);
+            villager.setCustomNameVisible(false);
+        }
+    }
+
+    /**
+     * Displays the villager's health as a custom name tag if the health is below its max health. Displays name if healed
+     * @param health
+     * @param maxHealth
+     */
+    public void updateHealthTag(double health, double maxHealth) {
+        CraftVillager villager = (CraftVillager) Bukkit.getEntity(this.uuid);
+        if (health < maxHealth - 0.5)
+            ((CraftVillager) Bukkit.getEntity(this.uuid)).getHandle().setCustomName(new ChatComponentText(ChatColor.RED + "❤ " + ChatColor.RESET + (int) Math.round(villager.getHealth()) + "/" + (int) villager.getMaxHealth()));
+        else setName(this.name);
+    }
+
+    /**
      * Returns this NationsVillager in JSON format
      * @return jsonVillager
      */
@@ -166,6 +207,22 @@ public class NationsVillager {
             jsonVillager.put("shop", ((Merchant) this).getShop().toJSON());
         else if (this.job == Job.LUMBERJACK)
             jsonVillager.put("inventory", ((Lumberjack) this).inventoryToJSON());
+        else if (this.job == Job.GUARD) {
+            Guard guard = (Guard) this;
+
+            JSONObject jsonGuardLocation = guard.guardLocationToJSON();
+            if (jsonGuardLocation == null)
+                jsonVillager.put("guardLocation", "null");
+            else jsonVillager.put("guardLocation", jsonGuardLocation);
+
+            JSONObject jsonWeapon = guard.weaponToJSON();
+            if (jsonWeapon == null)
+                jsonVillager.put("weapon", "null");
+            else jsonVillager.put("weapon", jsonWeapon);
+
+            JSONArray jsonArmor = guard.armorToJSON();
+            jsonVillager.put("armor", jsonArmor);
+        }
         return jsonVillager;
     }
 }

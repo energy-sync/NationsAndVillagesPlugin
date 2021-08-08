@@ -98,7 +98,7 @@ public class Shop {
      */
     public InventoryGUI getInventoryGUI(Player player) {
         this.items.removeAll(Collections.singleton(null));
-        InventoryGUI gui = new InventoryGUI(player, "Shop", 6);
+        InventoryGUI gui = new InventoryGUI(player, "Shop", 6, true);
         for (ShopItem shopItem : this.items) {
             InventoryGUIButton button = new InventoryGUIButton(gui, shopItem.getItem().getItemMeta().getDisplayName(), ChatColor.GREEN + "$" + shopItem.getPrice(), shopItem.getMaterial());
             button.getItem().addEnchantments(shopItem.getItem().getEnchantments());
@@ -136,7 +136,7 @@ public class Shop {
 
     //GUI for removing an item from the shop
     public void manageItemMenu(Player player, ShopItem shopItem) {
-        InventoryGUI gui = new InventoryGUI(player, "Remove Item From Shop?", 1);
+        InventoryGUI gui = new InventoryGUI(player, "Remove Item From Shop?", 1, true);
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
 
         //cancel button
@@ -175,7 +175,7 @@ public class Shop {
 
     //GUI for confirming the purchase of an item
     public void confirmBuyMenu(Player player, ShopItem shopItem) {
-        InventoryGUI gui = new InventoryGUI(player, "Confirm Purchase", 1);
+        InventoryGUI gui = new InventoryGUI(player, "Confirm Purchase", 1, true);
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
 
         //cancel button

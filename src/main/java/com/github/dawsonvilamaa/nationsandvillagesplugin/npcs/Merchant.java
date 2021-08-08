@@ -3,10 +3,13 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.npcs;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Shop;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.ShopItem;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.json.simple.JSONObject;
@@ -50,11 +53,18 @@ public class Merchant extends NationsVillager {
         return this.shop;
     }
 
+    //drops all of the items in the shop
+    public void stopJob() {
+        Entity entity = Bukkit.getEntity(getUniqueID());
+        for (ShopItem shopItem : this.shop.getItems())
+            entity.getWorld().dropItemNaturally(entity.getLocation(), shopItem.getItem());
+    }
+
     //Menus
 
     //GUI for manage existing items in the shop or assigning the villager a different job
     public void merchantOptionsMenu(Player player, PlayerInteractEntityEvent e) {
-        InventoryGUI gui = new InventoryGUI(player, "Merchant Options", 1);
+        InventoryGUI gui = new InventoryGUI(player, "Merchant Options", 1, true);
 
         //manage shop items button
         InventoryGUIButton manageShopButton = new InventoryGUIButton(gui, "Manage Shop Items", "Edit prices or remove items from the shop", Material.CHEST);

@@ -4,6 +4,7 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.InventoryListener;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Guard;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Lumberjack;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Merchant;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
@@ -138,6 +139,10 @@ public class Main extends JavaPlugin {
 
                     case LUMBERJACK:
                         nationsVillager = new Lumberjack(jsonVillager);
+                    break;
+
+                    case GUARD:
+                        nationsVillager = new Guard(jsonVillager);
                     break;
 
                     default:

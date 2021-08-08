@@ -7,26 +7,26 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.claim;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.unclaim;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
-import org.bukkit.*;
-import org.bukkit.block.Block;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Guard;
+import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
+import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_16_R3.entity.*;
 import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
-
-import java.util.HashSet;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class PlayerListener implements Listener {
     private Main plugin;

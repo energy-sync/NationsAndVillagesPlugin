@@ -1,6 +1,7 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.gui;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -9,6 +10,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Consumer;
 
 import java.util.ArrayList;
@@ -21,6 +24,9 @@ public class InventoryGUI implements Listener, InventoryHolder {
     private HashMap<Integer, InventoryGUIButton> buttons;
     private int slot;
     private int maxItems;
+    private boolean locked;
+    private NationsVillager villager;
+    private BukkitRunnable runnable;
 
     /**
      * Creates an inventory GUI with a given name and number of rows. Rows must be a value from 1-6
@@ -28,7 +34,7 @@ public class InventoryGUI implements Listener, InventoryHolder {
      * @param name
      * @param rows
      */
-    public InventoryGUI(Player player, String name, int rows) {
+    public InventoryGUI(Player player, String name, int rows, boolean locked) {
         this.player = player;
         this.name = name;
         if (rows < 1) rows = 1;
@@ -37,6 +43,9 @@ public class InventoryGUI implements Listener, InventoryHolder {
         this.buttons = new HashMap<>();
         this.slot = 0;
         this.maxItems = (9 * rows) - 1;
+        this.locked = locked;
+        this.villager = null;
+        this.runnable = null;
         Main.nationsManager.addMenu(player.getUniqueId(), this);
     }
 
@@ -64,6 +73,13 @@ public class InventoryGUI implements Listener, InventoryHolder {
      */
     public void setInventory(Inventory inventory) {
         this.inventory = inventory;
+    }
+
+    /**
+     * @return locked
+     */
+    public boolean isLocked() {
+        return this.locked;
     }
 
     /**
@@ -100,6 +116,18 @@ public class InventoryGUI implements Listener, InventoryHolder {
     }
 
     /**
+     * Sets a button at a specific slot in the inventory
+     * @param slot
+     * @param button
+     * @return
+     */
+    public InventoryGUIButton setButton(int slot, InventoryGUIButton button) {
+        this.inventory.setItem(slot, button.getItem());
+        this.buttons.put(slot, button);
+        return button;
+    }
+
+    /**
      * @return slot
      */
     public int getSlot() {
@@ -107,10 +135,39 @@ public class InventoryGUI implements Listener, InventoryHolder {
     }
 
     /**
-     * @param maxItems
+     * @return villager
      */
-    public void setMaxItems(int maxItems) {
-        this.maxItems = maxItems;
+    public NationsVillager getVillager() {
+        return this.villager;
+    }
+
+    /**
+     * @param villager
+     */
+    public void setVillager(NationsVillager villager) {
+        this.villager = villager;
+    }
+
+    /**
+     * @return runnable
+     */
+    public BukkitRunnable getRunnable() {
+        return this.runnable;
+    }
+
+    /**
+     * @param runnable
+     */
+    public void setRunnable(BukkitRunnable runnable) {
+        this.runnable = runnable;
+        this.runnable.runTaskTimer(Main.plugin, 2, 2);
+    }
+
+    /**
+     * Stops the GUI's runnable
+     */
+    public void stopRunnable() {
+        this.runnable.cancel();
     }
 
     /**

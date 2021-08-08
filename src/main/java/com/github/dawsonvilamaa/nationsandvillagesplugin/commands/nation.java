@@ -204,7 +204,7 @@ public class nation implements Command {
 
     //GUI to choose rank
     public static void ranksMenu(Player player) {
-        InventoryGUI gui = new InventoryGUI(player, "Ranks", 1);
+        InventoryGUI gui = new InventoryGUI(player, "Ranks", 1, true);
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 3);
         //legate
         InventoryGUIButton legateButton = new InventoryGUIButton(gui, "Legate", null, Material.DIAMOND);
@@ -226,7 +226,7 @@ public class nation implements Command {
     public static void permsMenu(Player player, NationsManager.Rank rank) {
         Nation nation = nationsManager.getNationByID(nationsManager.getPlayerByUUID(player.getUniqueId()).getNationID());
         NationsPermission perms = nation.getPermissionByRank(rank);
-        InventoryGUI gui = new InventoryGUI(player, rank.toString() + " Permissions", 1);
+        InventoryGUI gui = new InventoryGUI(player, rank.toString() + " Permissions", 1, true);
         //back button
         InventoryGUIButton backButton = new InventoryGUIButton(gui, "Back", null, Material.ARROW);
         backButton.setOnClick(e -> {

@@ -5,6 +5,7 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.ShopItem;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Guard;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Lumberjack;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Merchant;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
@@ -23,6 +24,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -46,14 +48,26 @@ public class NationsVillagerListener implements Listener {
     @EventHandler
     public void onTakeDamage(EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof CraftVillager) {
-            if (random.nextBoolean()) {
-                EntityVillager villager = ((CraftVillager) e.getEntity()).getHandle();
-                NationsVillager nationsVillager = Main.nationsManager.getVillagers().get(villager.getUniqueID());
+            NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId());
+
+            //shout for help if attacked by zombie
+            if (random.nextBoolean() && Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId()).getJob() != NationsVillager.Job.GUARD) {
                 if (e.getDamager() instanceof CraftPlayer)
                     nationsVillager.speakToPlayer((CraftPlayer) e.getDamager(), playerAttackMessages[random.nextInt(playerAttackMessages.length)]);
                 else if (e.getDamager() instanceof CraftZombie)
                     nationsVillager.shout(zombieAttackMessages[random.nextInt(zombieAttackMessages.length)]);
             }
+
+            //health tag
+            nationsVillager.updateHealthTag(((CraftVillager) e.getEntity()).getHealth(), ((CraftVillager) e.getEntity()).getMaxHealth());
+        }
+    }
+
+    @EventHandler
+    public void onGainHealthEvent(EntityRegainHealthEvent e) {
+        if (e.getEntity() instanceof CraftVillager) {
+            NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId());
+            nationsVillager.updateHealthTag(((CraftVillager) e.getEntity()).getHealth(), ((CraftVillager) e.getEntity()).getMaxHealth());
         }
     }
 
@@ -150,6 +164,8 @@ public class NationsVillagerListener implements Listener {
                         entity.getWorld().dropItemNaturally(entity.getLocation(), item);
                 }
             }
+            else if (nationsVillager instanceof Guard)
+                ((Guard) nationsVillager).stopJob();
         }
     }
 
@@ -162,7 +178,7 @@ public class NationsVillagerListener implements Listener {
     public static void assignJobMenu(PlayerInteractEntityEvent e) {
         Player player = e.getPlayer();
         NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(e.getRightClicked().getUniqueId());
-        InventoryGUI gui = new InventoryGUI(player, "Assign Job to " + nationsVillager.getName(), 1);
+        InventoryGUI gui = new InventoryGUI(player, "Assign Job to " + nationsVillager.getName(), 1, true);
 
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
 
@@ -193,12 +209,18 @@ public class NationsVillagerListener implements Listener {
         });
         gui.addButton(lumberjackButton);
 
-        //farmer button
-        InventoryGUIButton farmerButton = new InventoryGUIButton(gui, "Farmer", "Farms nearby crops", Material.WHEAT);
-        farmerButton.setOnClick(f -> {
-
+        //guard button
+        InventoryGUIButton guardButton = new InventoryGUIButton(gui, "Guard", "Defends from mobs and enemy players", Material.IRON_SWORD);
+        guardButton.setOnClick(f -> {
+            if (nationsVillager.getJob() != NationsVillager.Job.GUARD) {
+                endJob(nationsVillager);
+                Main.nationsManager.getVillagers().put(nationsVillager.getUniqueID(), new Guard(nationsVillager.getUniqueID(), nationsVillager.getNationID(), e.getRightClicked().getLocation()));
+                player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, 0.7f);
+                player.sendMessage(ChatColor.GREEN + "Assigned this villager to be a guard");
+                player.closeInventory();
+            }
         });
-        gui.addButton(farmerButton);
+        gui.addButton(guardButton);
 
         //miner button
         InventoryGUIButton minerButton = new InventoryGUIButton(gui, "Miner", "Mines stuff", Material.IRON_PICKAXE);
@@ -207,12 +229,12 @@ public class NationsVillagerListener implements Listener {
         });
         gui.addButton(minerButton);
 
-        //guard button
-        InventoryGUIButton guardButton = new InventoryGUIButton(gui, "Guard", "Defends from mobs and enemy players", Material.IRON_SWORD);
-        guardButton.setOnClick(f -> {
+        //farmer button
+        InventoryGUIButton farmerButton = new InventoryGUIButton(gui, "Farmer", "Farms nearby crops", Material.WHEAT);
+        farmerButton.setOnClick(f -> {
 
         });
-        gui.addButton(guardButton);
+        gui.addButton(farmerButton);
 
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 2);
         gui.showMenu();
@@ -223,17 +245,18 @@ public class NationsVillagerListener implements Listener {
      * @param nationsVillager
      */
     private static void endJob(NationsVillager nationsVillager) {
-        Entity entity = Bukkit.getEntity(nationsVillager.getUniqueID());
-        if (nationsVillager.getJob() == NationsVillager.Job.MERCHANT) {
-            for (ShopItem shopItem : ((Merchant) nationsVillager).getShop().getItems())
-                entity.getWorld().dropItemNaturally(entity.getLocation(), shopItem.getItem());
-        }
-        else if (nationsVillager.getJob() == NationsVillager.Job.LUMBERJACK) {
-            Lumberjack lumberjack = ((Lumberjack) nationsVillager);
-            lumberjack.stopJob();
-            for (ItemStack item : lumberjack.getInventory().getContents())
-                if (item != null)
-                    entity.getWorld().dropItemNaturally(entity.getLocation(), item);
+        switch (nationsVillager.getJob()) {
+            case MERCHANT:
+                ((Merchant) nationsVillager).stopJob();
+            break;
+
+            case LUMBERJACK:
+                ((Lumberjack) nationsVillager).stopJob();
+            break;
+
+            case GUARD:
+                ((Guard) nationsVillager).stopJob();
+            break;
         }
     }
 }

@@ -16,6 +16,7 @@ public class InventoryGUIButton {
     private Material material;
     private int slot;
     private ItemStack item;
+    private boolean locked;
     private InventoryGUI parentGUI;
     private Consumer<InventoryClickEvent> onClick;
 
@@ -37,12 +38,28 @@ public class InventoryGUIButton {
             meta.setLore(Arrays.asList(description));
         }
         this.material = material;
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-        newItem.setItemMeta(meta);
+        if (material != Material.AIR) {
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            newItem.setItemMeta(meta);
+        }
         this.item = newItem;
+        this.locked = true;
         this.parentGUI = parentGUI;
         this.slot = parentGUI.getSlot();
         this.onClick = null;
+    }
+
+    /**
+     * Secondary constructor that lets you specify whether the button can be moved by the player
+     * @param parentGUI
+     * @param name
+     * @param description
+     * @param material
+     * @param locked
+     */
+    public InventoryGUIButton(InventoryGUI parentGUI, String name, String description, Material material, boolean locked) {
+        this(parentGUI, name, description, material);
+        this.locked = locked;
     }
 
     /**
@@ -93,6 +110,28 @@ public class InventoryGUIButton {
      */
     public ItemStack getItem() {
         return this.item;
+    }
+
+    /**
+     * @param item
+     */
+    public void setItem(ItemStack item) {
+        this.item = item.clone();
+        this.parentGUI.getInventory().setItem(this.slot, item);
+    }
+
+    /**
+     * @return locked
+     */
+    public boolean isLocked() {
+        return this.locked;
+    }
+
+    /**
+     * @param locked
+     */
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     /**
