@@ -100,8 +100,9 @@ public class Lumberjack extends NationsVillager {
             @Override
             public void run() {
                 Entity entity = Bukkit.getEntity(getUniqueID());
-                if (entity.getLocation().getChunk().isLoaded()) {
-                    //finds closest log to lumberjack
+                if (entity != null && entity.getLocation().getChunk().isLoaded()) {
+                    //finds closest tree to lumberjack, which is at least one log connected to at least one leaf block
+                    boolean isTree = false;
                     Location entityLoc = entity.getLocation();
                     Block closestBlock = null;
                     double closestDist = -1;
@@ -109,70 +110,89 @@ public class Lumberjack extends NationsVillager {
                         for (int y = -RADIUS; y <= RADIUS; y++) {
                             for (int z = -RADIUS; z <= RADIUS; z++) {
                                 Location blockLoc = new Location(entity.getWorld(), x + entityLoc.getBlockX(), y + entityLoc.getBlockY(), z + entityLoc.getBlockZ());
-                                if (blockLoc.getBlock().getType().toString().contains("LOG")) {
-                                    double dist = dist(entity.getLocation(), blockLoc);
-                                    if (closestBlock == null || dist < closestDist) {
-                                        closestBlock = blockLoc.getBlock();
-                                        closestDist = dist;
+                                String blockMaterialStr = blockLoc.getBlock().getType().toString();
+                                if (blockMaterialStr.contains("LOG")) {
+                                    //check for leaves
+                                    for (int a = -1; a <= 1; a++) {
+                                        for (int b = -1; b <= 1; b++) {
+                                            for (int c = -1; c <= 1; c++) {
+                                                if (isTree == false) {
+                                                    Location leafBlockLoc = new Location(entity.getWorld(), blockLoc.getBlockX() + a, blockLoc.getBlockY(), blockLoc.getBlockZ() + c);
+                                                    String leafBlockMaterialStr = entity.getWorld().getBlockAt(leafBlockLoc).getType().toString();
+                                                    if (leafBlockMaterialStr.contains("LEAVES"))
+                                                        isTree = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (isTree == true) {
+                                        //find closest log
+                                        double dist = dist(entity.getLocation(), blockLoc);
+                                        if (closestBlock == null || dist < closestDist) {
+                                            closestBlock = blockLoc.getBlock();
+                                            closestDist = dist;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    //finds root log
-                    Block root = closestBlock;
-                    HashSet<Block> saplings = new HashSet<>();
-                    boolean done = false;
-                    if (closestBlock != null) {
-                        while (!done) {
-                            Block newRoot = null;
-                            int y = root.getY() - 1;
-                            Location blockLoc = root.getLocation();
-                            for (int x = blockLoc.getBlockX() - 1; x <= blockLoc.getBlockX() + 1; x++) {
-                                for (int z = blockLoc.getBlockZ() - 1; z <= blockLoc.getBlockZ() + 1; z++) {
-                                    Block pRoot = root.getWorld().getBlockAt(x, y, z);
-                                    if (pRoot.getType().toString().contains("LOG"))
-                                        newRoot = pRoot;
-                                }
-                            }
-                            if (newRoot != null)
-                                root = newRoot;
-                            else done = true;
-                        }
-
-                        //set sapling blocks
-                        Location rootLoc = root.getLocation();
-                        int y = rootLoc.getBlockY();
-                        for (int x = rootLoc.getBlockX() - 1; x <= rootLoc.getBlockX() + 1; x++) {
-                            for (int z = root.getZ() - 1; z <= rootLoc.getBlockZ() + 1; z++) {
-                                Block block = root.getWorld().getBlockAt(x, y, z);
-                                if (root.getWorld().getBlockAt(x, y, z).getType().toString().contains("LOG"))
-                                    saplings.add(block);
-                            }
-                        }
-
-                        //cut down tree
-                        if (closestDist <= MIN_RADIUS) {
-                            Block block = closestBlock;
-                            String blockType = block.getType().toString();
-                            treecapitate(closestBlock, new HashSet<>());
-                            //plant sapling
-                            HashSet<Block> finalSaplings = saplings;
-                            new BukkitRunnable() {
-                                public void run() {
-                                    for (Block root : finalSaplings) {
-                                        Material saplingType;
-                                        if (blockType.equals("DARK_OAK_LOG"))
-                                            saplingType = Material.DARK_OAK_SAPLING;
-                                        else saplingType = Material.valueOf(blockType.substring(0, blockType.indexOf("_") + 1) + "SAPLING");
-                                        root.setType(saplingType);
-                                        root.getWorld().playSound(block.getLocation(), Sound.BLOCK_GRASS_PLACE, 0.4f, 0.8f);
+                    if (isTree == true) {
+                        //finds root log
+                        Block root = closestBlock;
+                        HashSet<Block> saplings = new HashSet<>();
+                        boolean done = false;
+                        if (closestBlock != null) {
+                            while (!done) {
+                                Block newRoot = null;
+                                int y = root.getY() - 1;
+                                Location blockLoc = root.getLocation();
+                                for (int x = blockLoc.getBlockX() - 1; x <= blockLoc.getBlockX() + 1; x++) {
+                                    for (int z = blockLoc.getBlockZ() - 1; z <= blockLoc.getBlockZ() + 1; z++) {
+                                        Block pRoot = root.getWorld().getBlockAt(x, y, z);
+                                        if (pRoot.getType().toString().contains("LOG"))
+                                            newRoot = pRoot;
                                     }
                                 }
-                            }.runTaskLater(Main.plugin, 20);
+                                if (newRoot != null)
+                                    root = newRoot;
+                                else done = true;
+                            }
+
+                            //set sapling blocks
+                            Location rootLoc = root.getLocation();
+                            int y = rootLoc.getBlockY();
+                            for (int x = rootLoc.getBlockX() - 1; x <= rootLoc.getBlockX() + 1; x++) {
+                                for (int z = root.getZ() - 1; z <= rootLoc.getBlockZ() + 1; z++) {
+                                    Block block = root.getWorld().getBlockAt(x, y, z);
+                                    if (root.getWorld().getBlockAt(x, y, z).getType().toString().contains("LOG"))
+                                        saplings.add(block);
+                                }
+                            }
+
+                            //cut down tree
+                            if (closestDist <= MIN_RADIUS) {
+                                Block block = closestBlock;
+                                String blockType = block.getType().toString();
+                                treecapitate(closestBlock, new HashSet<>());
+                                //plant sapling
+                                HashSet<Block> finalSaplings = saplings;
+                                new BukkitRunnable() {
+                                    public void run() {
+                                        for (Block root : finalSaplings) {
+                                            Material saplingType;
+                                            if (blockType.equals("DARK_OAK_LOG"))
+                                                saplingType = Material.DARK_OAK_SAPLING;
+                                            else saplingType = Material.valueOf(blockType.substring(0, blockType.indexOf("_") + 1) + "SAPLING");
+                                            root.setType(saplingType);
+                                            root.getWorld().playSound(block.getLocation(), Sound.BLOCK_GRASS_PLACE, 0.4f, 0.8f);
+                                        }
+                                    }
+                                }.runTaskLater(Main.plugin, 20);
+                            }
+                            else walkToLocation(closestBlock.getLocation());
                         }
-                        else walkToLocation(closestBlock.getLocation());
                     }
 
                     //pick up items

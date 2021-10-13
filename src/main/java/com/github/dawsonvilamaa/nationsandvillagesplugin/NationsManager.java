@@ -80,6 +80,8 @@ public class NationsManager {
      */
     public void addNation(Nation newNation) {
         this.nations.put(newNation.getID(), newNation);
+        if (newNation.getID() > this.nextNationID)
+            this.nextNationID = newNation.getID();
     }
 
     /**
@@ -253,7 +255,21 @@ public class NationsManager {
      * @return nextNationID
      */
     public int nextNationID() {
-        this.nextNationID = this.nextNationID + 1;
+        this.nextNationID++;
         return this.nextNationID;
+    }
+
+    /**
+     * @return nextNationID
+     */
+    public int getNextNationID() {
+        return this.nextNationID;
+    }
+
+    /**
+     * @param nextNationID
+     */
+    public void setNextNationID(int nextNationID) {
+        this.nextNationID = nextNationID;
     }
 }

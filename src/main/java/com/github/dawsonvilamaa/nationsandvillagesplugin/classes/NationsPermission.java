@@ -9,6 +9,7 @@ public class NationsPermission {
     private boolean attackEntities;
     private boolean claimLand;
     private boolean manageMembers;
+    private boolean declareEnemies;
 
     /**
      * @param rank
@@ -22,6 +23,7 @@ public class NationsPermission {
                 attackEntities = true;
                 claimLand = true;
                 manageMembers = true;
+                declareEnemies = true;
             break;
 
             case MEMBER:
@@ -30,6 +32,7 @@ public class NationsPermission {
                 attackEntities = true;
                 claimLand = false;
                 manageMembers = false;
+                declareEnemies = false;
             break;
 
             case NONMEMBER:
@@ -38,6 +41,7 @@ public class NationsPermission {
                 attackEntities = false;
                 claimLand = false;
                 manageMembers = false;
+                declareEnemies = false;
             break;
         }
     }
@@ -51,6 +55,7 @@ public class NationsPermission {
         this.attackEntities = Boolean.valueOf(jsonPermission.get("attackEntities").toString());
         this.claimLand = Boolean.valueOf(jsonPermission.get("claimLand").toString());
         this.manageMembers = Boolean.valueOf(jsonPermission.get("manageMembers").toString());
+        this.declareEnemies = Boolean.valueOf(jsonPermission.get("declareEnemies").toString());
     }
 
     /**
@@ -123,6 +128,20 @@ public class NationsPermission {
         this.manageMembers = manageMembers;
     }
 
+    /**
+     * @return canDeclareEnemies
+     */
+    public boolean canDeclareEnemies() {
+        return this.declareEnemies;
+    }
+
+    /**
+     * @param declareEnemies
+     */
+    public void setDeclareEnemies(boolean declareEnemies) {
+        this.declareEnemies = declareEnemies;
+    }
+
     public JSONObject toJSON() {
         JSONObject jsonPermission = new JSONObject();
         jsonPermission.put("modifyBlocks", this.modifyBlocks);
@@ -130,6 +149,7 @@ public class NationsPermission {
         jsonPermission.put("attackEntities", this.attackEntities);
         jsonPermission.put("claimLand", this.claimLand);
         jsonPermission.put("manageMembers", this.manageMembers);
+        jsonPermission.put("declareEnemies", this.declareEnemies);
         return jsonPermission;
     }
 }

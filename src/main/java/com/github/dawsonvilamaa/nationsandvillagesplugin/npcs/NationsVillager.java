@@ -212,12 +212,12 @@ public class NationsVillager {
 
             JSONObject jsonGuardLocation = guard.guardLocationToJSON();
             if (jsonGuardLocation == null)
-                jsonVillager.put("guardLocation", "null");
+                jsonVillager.put("guardLocation", null);
             else jsonVillager.put("guardLocation", jsonGuardLocation);
 
             JSONObject jsonWeapon = guard.weaponToJSON();
             if (jsonWeapon == null)
-                jsonVillager.put("weapon", "null");
+                jsonVillager.put("weapon", null);
             else jsonVillager.put("weapon", jsonWeapon);
 
             JSONArray jsonArmor = guard.armorToJSON();

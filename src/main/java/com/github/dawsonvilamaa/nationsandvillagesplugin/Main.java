@@ -29,17 +29,19 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 
 public class Main extends JavaPlugin {
-    private PlayerListener playerListener = new PlayerListener(this);
-    private NationsVillagerListener nationsVillagerListener = new NationsVillagerListener(this);
-    private WorldListener worldListener = new WorldListener(this);
-    private InventoryListener inventoryListener = new InventoryListener(this);
+    private final PlayerListener playerListener = new PlayerListener(this);
+    private final NationsVillagerListener nationsVillagerListener = new NationsVillagerListener(this);
+    private final WorldListener worldListener = new WorldListener(this);
+    private final InventoryListener inventoryListener = new InventoryListener(this);
 
     public static Main plugin;
     public static NationsManager nationsManager;
     public PluginManager pm = getServer().getPluginManager();
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void onEnable() {
         plugin = this;
@@ -47,17 +49,9 @@ public class Main extends JavaPlugin {
 
         //register commands
         NAVCommandExecutor commandExecutor = new NAVCommandExecutor(this);
-        getCommand("autoclaim").setExecutor(commandExecutor);
-        getCommand("autounclaim").setExecutor(commandExecutor);
-        getCommand("balance").setExecutor(commandExecutor);
-        getCommand("claim").setExecutor(commandExecutor);
-        getCommand("demote").setExecutor(commandExecutor);
-        getCommand("exile").setExecutor(commandExecutor);
-        getCommand("invite").setExecutor(commandExecutor);
-        getCommand("nation").setExecutor(commandExecutor);
-        getCommand("promote").setExecutor(commandExecutor);
-        getCommand("sell").setExecutor(commandExecutor);
-        getCommand("unclaim").setExecutor(commandExecutor);
+        Objects.requireNonNull(getCommand("balance")).setExecutor(commandExecutor);
+        Objects.requireNonNull(getCommand("nation")).setExecutor(commandExecutor);
+        Objects.requireNonNull(getCommand("sell")).setExecutor(commandExecutor);
 
         //register events
         pm.registerEvents(playerListener, this);
@@ -203,7 +197,7 @@ public class Main extends JavaPlugin {
             getLogger().info("IOException: " + e.getMessage());
         } finally {
             try {
-                playerFile.flush();
+                Objects.requireNonNull(playerFile).flush();
                 playerFile.close();
             } catch (IOException ex) {
                 getLogger().info("IOException: " + ex.getMessage());
@@ -223,7 +217,7 @@ public class Main extends JavaPlugin {
             getLogger().info("IOException: " + e.getMessage());
         } finally {
             try {
-                nationsFile.flush();
+                Objects.requireNonNull(nationsFile).flush();
                 nationsFile.close();
             } catch(IOException e) {
                 getLogger().info("IOException: " + e.getMessage());
@@ -243,7 +237,7 @@ public class Main extends JavaPlugin {
             getLogger().info("IOException: " + e.getMessage());
         } finally {
             try {
-                villagersFile.flush();
+                Objects.requireNonNull(villagersFile).flush();
                 villagersFile.close();
             } catch (IOException e) {
                 getLogger().info("IOException: " + e.getMessage());
@@ -263,7 +257,7 @@ public class Main extends JavaPlugin {
             getLogger().info("IOException: " + e.getMessage());
         } finally {
             try {
-                chunksFile.flush();
+                Objects.requireNonNull(chunksFile).flush();
                 chunksFile.close();
             } catch(IOException e) {
                 getLogger().info("IOException: " + e.getMessage());

@@ -194,141 +194,144 @@ public class Guard extends NationsVillager {
         this.runnable = new BukkitRunnable() {
             @Override
             public void run() {
-                ticks++;
-                //regenerate health
-                if (villager[0] == null)
-                    villager[0] = (CraftVillager) Bukkit.getEntity(getUniqueID());
-                if (villager[0] != null) {
-                    if (villager[0].getHealth() < 20 && ticks % 8 == 0) {
-                        if (villager[0].getMaxHealth() - villager[0].getHealth() < 0.5)
-                            villager[0].setHealth(villager[0].getMaxHealth());
-                        else villager[0].setHealth(villager[0].getHealth() + 0.5);
-                    }
-                    Main.nationsManager.getVillagerByUUID(villager[0].getUniqueId()).updateHealthTag();
+                Entity vEntity = Bukkit.getEntity(getUniqueID());
+                if (vEntity != null && vEntity.getLocation().getChunk().isLoaded()) {
+                    ticks++;
+                    //regenerate health
+                    if (villager[0] == null)
+                        villager[0] = (CraftVillager) Bukkit.getEntity(getUniqueID());
+                    if (villager[0] != null) {
+                        if (villager[0].getHealth() < 20 && ticks % 8 == 0) {
+                            if (villager[0].getMaxHealth() - villager[0].getHealth() < 0.5)
+                                villager[0].setHealth(villager[0].getMaxHealth());
+                            else villager[0].setHealth(villager[0].getHealth() + 0.5);
+                        }
+                        Main.nationsManager.getVillagerByUUID(villager[0].getUniqueId()).updateHealthTag();
 
-                    //follow mode
-                    if (guardMode == GuardMode.FOLLOW && distance(villager[0].getLocation(), followPlayer.getLocation()) > 3)
-                        walkToLocation(followPlayer.getLocation());
-                    else {
-                        //find nearby hostile enemies
-                        List<Entity> nearbyEntities = villager[0].getNearbyEntities(guardMode == GuardMode.FOLLOW ? RADIUS / 2 : RADIUS, 2, guardMode == GuardMode.FOLLOW ? RADIUS / 2 : RADIUS);
-                        if (nearbyEntities.size() > 0) {
-                            EntityType hostileMobs[] = new EntityType[] { EntityType.BLAZE, EntityType.CREEPER, EntityType.DROWNED, EntityType.ENDERMITE, EntityType.EVOKER, EntityType.HUSK, EntityType.MAGMA_CUBE, EntityType.PILLAGER, EntityType.RAVAGER, EntityType.SILVERFISH, EntityType.SKELETON, EntityType.SLIME, EntityType.SPIDER, EntityType.STRAY, EntityType.VINDICATOR, EntityType.WITCH, EntityType.WITHER_SKELETON, EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER, EntityType.HOGLIN, EntityType.CAVE_SPIDER, EntityType.ZOGLIN };
-                            ArrayList<Map.Entry<Entity, Double>> closestMobs = new ArrayList<>();
-                            for (Entity entity : nearbyEntities) {
-                                for (EntityType mob : hostileMobs) {
-                                    if (entity.getType() == mob) {
-                                        Location villagerLoc = villager[0].getLocation();
-                                        Location mobLoc = entity.getLocation();
-                                        double distance = distance(villagerLoc, mobLoc);
-                                        closestMobs.add(new AbstractMap.SimpleEntry<>(entity, distance));
+                        //follow mode
+                        if (guardMode == GuardMode.FOLLOW && distance(villager[0].getLocation(), followPlayer.getLocation()) > 3)
+                            walkToLocation(followPlayer.getLocation());
+                        else {
+                            //find nearby hostile enemies
+                            List<Entity> nearbyEntities = villager[0].getNearbyEntities(guardMode == GuardMode.FOLLOW ? RADIUS / 2 : RADIUS, 2, guardMode == GuardMode.FOLLOW ? RADIUS / 2 : RADIUS);
+                            if (nearbyEntities.size() > 0) {
+                                EntityType hostileMobs[] = new EntityType[] { EntityType.BLAZE, EntityType.CREEPER, EntityType.DROWNED, EntityType.ENDERMITE, EntityType.EVOKER, EntityType.HUSK, EntityType.MAGMA_CUBE, EntityType.PILLAGER, EntityType.RAVAGER, EntityType.SILVERFISH, EntityType.SKELETON, EntityType.SLIME, EntityType.SPIDER, EntityType.STRAY, EntityType.VINDICATOR, EntityType.WITCH, EntityType.WITHER_SKELETON, EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER, EntityType.HOGLIN, EntityType.CAVE_SPIDER, EntityType.ZOGLIN };
+                                ArrayList<Map.Entry<Entity, Double>> closestMobs = new ArrayList<>();
+                                for (Entity entity : nearbyEntities) {
+                                    for (EntityType mob : hostileMobs) {
+                                        if (entity.getType() == mob) {
+                                            Location villagerLoc = villager[0].getLocation();
+                                            Location mobLoc = entity.getLocation();
+                                            double distance = distance(villagerLoc, mobLoc);
+                                            closestMobs.add(new AbstractMap.SimpleEntry<>(entity, distance));
+                                        }
                                     }
                                 }
-                            }
-                            if (closestMobs.size() > 0) {
-                                closestMobs.sort(Comparator.comparing(Map.Entry::getValue));
-                                Entity mob = closestMobs.get(0).getKey();
-                                //attack mob
-                                if (closestMobs.get(0).getValue() <= 2.0 && ticks % 4 == 0) {
-                                    lookAtLocation(mob.getLocation(), villager[0]);
-                                    double damageAmount;
-                                    double xDir = villager[0].getLocation().getX() - mob.getLocation().getX() >= 0 ? 1 : -1;
-                                    double zDir = villager[0].getLocation().getZ() - mob.getLocation().getZ() >= 0 ? 1 : -1;
-                                    Vector knockbackVector = new Vector(0.4 * xDir, -0.25, 0.4 * zDir);
-                                    knockbackVector.multiply(-1);
-                                    //knockbackVector.normalize();
+                                if (closestMobs.size() > 0) {
+                                    closestMobs.sort(Comparator.comparing(Map.Entry::getValue));
+                                    Entity mob = closestMobs.get(0).getKey();
+                                    //attack mob
+                                    if (closestMobs.get(0).getValue() <= 2.0 && ticks % 4 == 0) {
+                                        lookAtLocation(mob.getLocation(), villager[0]);
+                                        double damageAmount;
+                                        double xDir = villager[0].getLocation().getX() - mob.getLocation().getX() >= 0 ? 1 : -1;
+                                        double zDir = villager[0].getLocation().getZ() - mob.getLocation().getZ() >= 0 ? 1 : -1;
+                                        Vector knockbackVector = new Vector(0.4 * xDir, -0.25, 0.4 * zDir);
+                                        knockbackVector.multiply(-1);
+                                        //knockbackVector.normalize();
 
-                                    //base damage
-                                    if (weapon == null)
-                                        damageAmount = 2;
-                                    else {
-                                        switch (weapon.getType()) {
-                                            case WOODEN_SWORD:
-                                            case GOLDEN_SWORD:
-                                                damageAmount = 4;
-                                                break;
-
-                                            case STONE_SWORD:
-                                                damageAmount = 5;
-                                                break;
-
-                                            case IRON_SWORD:
-                                                damageAmount = 6;
-                                                break;
-
-                                            case DIAMOND_SWORD:
-                                                damageAmount = 7;
-                                                break;
-
-                                            case NETHERITE_SWORD:
-                                                damageAmount = 8;
-                                                break;
-
-                                            default:
-                                                damageAmount = 2;
-                                        }
-
-                                        //enchantments
-                                        for (Enchantment enchantment : weapon.getEnchantments().keySet()) {
-                                            int level = weapon.getEnchantmentLevel(enchantment);
-                                            switch(enchantment.getKey().toString()) {
-                                                case "minecraft:bane_of_arthropods":
-                                                    if (mob.getType() == EntityType.SPIDER || mob.getType() == EntityType.CAVE_SPIDER || mob.getType() == EntityType.SILVERFISH || mob.getType() == EntityType.ENDERMITE) {
-                                                        damageAmount += 2.5 * level;
-                                                        double slownessLength = ThreadLocalRandom.current().nextDouble(1, 2 + (0.5 * level));
-                                                        ((LivingEntity) mob).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) Math.round(slownessLength * 20), 4, false, true));
-                                                    }
+                                        //base damage
+                                        if (weapon == null)
+                                            damageAmount = 2;
+                                        else {
+                                            switch (weapon.getType()) {
+                                                case WOODEN_SWORD:
+                                                case GOLDEN_SWORD:
+                                                    damageAmount = 4;
                                                     break;
 
-                                                case "minecraft:fire_aspect":
-                                                    mob.setFireTicks(80 * level);
+                                                case STONE_SWORD:
+                                                    damageAmount = 5;
                                                     break;
 
-                                                case "minecraft:knockback":
-                                                    knockbackVector.add(new Vector(0.4 * level * xDir * -1, 0, 0.4 * level * zDir * -1));
+                                                case IRON_SWORD:
+                                                    damageAmount = 6;
                                                     break;
 
-                                                case "minecraft:sharpness":
-                                                    damageAmount += 0.5 * level + 0.5;
+                                                case DIAMOND_SWORD:
+                                                    damageAmount = 7;
                                                     break;
 
-                                                case "minecraft:smite":
-                                                    if (mob.getType() == EntityType.SKELETON || mob.getType() == EntityType.ZOMBIE || mob.getType() == EntityType.ZOMBIE_VILLAGER || mob.getType() == EntityType.WITHER || mob.getType() == EntityType.WITHER_SKELETON || mob.getType() == EntityType.STRAY || mob.getType() == EntityType.HUSK || mob.getType() == EntityType.DROWNED || mob.getType() == EntityType.ZOGLIN) {
-                                                        damageAmount += 2.5 * level;
-                                                    }
+                                                case NETHERITE_SWORD:
+                                                    damageAmount = 8;
                                                     break;
+
+                                                default:
+                                                    damageAmount = 2;
+                                            }
+
+                                            //enchantments
+                                            for (Enchantment enchantment : weapon.getEnchantments().keySet()) {
+                                                int level = weapon.getEnchantmentLevel(enchantment);
+                                                switch(enchantment.getKey().toString()) {
+                                                    case "minecraft:bane_of_arthropods":
+                                                        if (mob.getType() == EntityType.SPIDER || mob.getType() == EntityType.CAVE_SPIDER || mob.getType() == EntityType.SILVERFISH || mob.getType() == EntityType.ENDERMITE) {
+                                                            damageAmount += 2.5 * level;
+                                                            double slownessLength = ThreadLocalRandom.current().nextDouble(1, 2 + (0.5 * level));
+                                                            ((LivingEntity) mob).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) Math.round(slownessLength * 20), 4, false, true));
+                                                        }
+                                                        break;
+
+                                                    case "minecraft:fire_aspect":
+                                                        mob.setFireTicks(80 * level);
+                                                        break;
+
+                                                    case "minecraft:knockback":
+                                                        knockbackVector.add(new Vector(0.4 * level * xDir * -1, 0, 0.4 * level * zDir * -1));
+                                                        break;
+
+                                                    case "minecraft:sharpness":
+                                                        damageAmount += 0.5 * level + 0.5;
+                                                        break;
+
+                                                    case "minecraft:smite":
+                                                        if (mob.getType() == EntityType.SKELETON || mob.getType() == EntityType.ZOMBIE || mob.getType() == EntityType.ZOMBIE_VILLAGER || mob.getType() == EntityType.WITHER || mob.getType() == EntityType.WITHER_SKELETON || mob.getType() == EntityType.STRAY || mob.getType() == EntityType.HUSK || mob.getType() == EntityType.DROWNED || mob.getType() == EntityType.ZOGLIN) {
+                                                            damageAmount += 2.5 * level;
+                                                        }
+                                                        break;
+                                                }
                                             }
                                         }
-                                    }
 
-                                    ((LivingEntity) mob).damage(damageAmount);
-                                    mob.setVelocity(knockbackVector);
-                                    ((Monster) mob).setTarget((LivingEntity) villager[0]);
+                                        ((LivingEntity) mob).damage(damageAmount);
+                                        mob.setVelocity(knockbackVector);
+                                        ((Monster) mob).setTarget((LivingEntity) villager[0]);
+                                    }
+                                    else {
+                                        //run to mob
+                                        if (guardMode == GuardMode.STATIONARY && distance(guardLocation, mob.getLocation()) <= 20) {
+                                            lookAtLocation(mob.getLocation(), villager[0]);
+                                            runToLocation(mob.getLocation());
+                                        }
+                                        else if ((guardMode == GuardMode.BODYGUARD) && distance(mob.getLocation(), followPlayer.getLocation()) <= 10) {
+                                            lookAtLocation(mob.getLocation(), villager[0]);
+                                            runToLocation(mob.getLocation());
+                                        }
+                                        else if (guardMode == GuardMode.WANDER && distance(villager[0].getLocation(), mob.getLocation()) <= 15) {
+                                            lookAtLocation(mob.getLocation(), villager[0]);
+                                            runToLocation(mob.getLocation());
+                                        }
+                                        else returnToStart(villager[0]);
+                                    }
                                 }
                                 else {
-                                    //run to mob
-                                    if (guardMode == GuardMode.STATIONARY && distance(guardLocation, mob.getLocation()) <= 20) {
-                                        lookAtLocation(mob.getLocation(), villager[0]);
-                                        runToLocation(mob.getLocation());
-                                    }
-                                    else if ((guardMode == GuardMode.BODYGUARD) && distance(mob.getLocation(), followPlayer.getLocation()) <= 10) {
-                                        lookAtLocation(mob.getLocation(), villager[0]);
-                                        runToLocation(mob.getLocation());
-                                    }
-                                    else if (guardMode == GuardMode.WANDER && distance(villager[0].getLocation(), mob.getLocation()) <= 15) {
-                                        lookAtLocation(mob.getLocation(), villager[0]);
-                                        runToLocation(mob.getLocation());
-                                    }
-                                    else returnToStart(villager[0]);
+                                    returnToStart(villager[0]);
                                 }
                             }
-                            else {
-                                returnToStart(villager[0]);
-                            }
                         }
+                        if (ticks >= 8)
+                            ticks = 0;
                     }
-                    if (ticks >= 8)
-                        ticks = 0;
                 }
             }
         }.runTaskTimer(Main.plugin, 20, 5);

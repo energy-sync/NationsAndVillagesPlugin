@@ -2,18 +2,14 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.classes;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.NationsManager;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.VillageNotFoundException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -24,6 +20,7 @@ public class Nation {
     private ArrayList<UUID> members;
     private int population;
     private int chunks;
+    private ArrayList<Integer> enemies;
 
     //permissions
     NationsPermission legatePermissions;
@@ -46,6 +43,7 @@ public class Nation {
         this.legatePermissions = new NationsPermission(NationsManager.Rank.LEGATE);
         this.memberPermissions = new NationsPermission(NationsManager.Rank.MEMBER);
         this.nonMemberPermissions = new NationsPermission(NationsManager.Rank.NONMEMBER);
+        this.enemies = new ArrayList<>();
         this.invitedPlayers = new ArrayList<>();
     }
 
@@ -62,6 +60,10 @@ public class Nation {
         this.legatePermissions = new NationsPermission((JSONObject) jsonNation.get("legatePermissions"));
         this.memberPermissions = new NationsPermission((JSONObject) jsonNation.get("memberPermissions"));
         this.nonMemberPermissions = new NationsPermission((JSONObject) jsonNation.get("nonMemberPermissions"));
+        this.enemies = new ArrayList<>();
+        ArrayList<Object> enemiesArray = ((JSONArray) jsonNation.get("enemies"));
+        for (Object nationID : enemiesArray)
+            this.enemies.add(((Long) nationID).intValue());
         this.invitedPlayers = new ArrayList<>();
     }
 
@@ -120,6 +122,38 @@ public class Nation {
     public void removeMember(UUID uuid) {
         this.members.remove(uuid);
         this.members.trimToSize();
+    }
+
+    /**
+     * @return enemies
+     */
+    public ArrayList<Integer> getEnemies() {
+        return this.enemies;
+    }
+
+    /**
+     * Adds a nation to this nation's enemy list
+     * @param enemyNationID
+     */
+    public void addEnemy(int enemyNationID) {
+        this.enemies.add(enemyNationID);
+    }
+
+    /**
+     * Removes a nation from the nation's enemy list
+     * @param enemyNationID
+     */
+    public void removeEnemy(int enemyNationID) {
+        this.enemies.remove(enemyNationID);
+    }
+
+    /**
+     * Returns whether the given nation is an enemy
+     * @param enemyNationID
+     * @return
+     */
+    public boolean isEnemy(int enemyNationID) {
+        return this.enemies.contains(enemyNationID);
     }
 
     /**
@@ -251,6 +285,10 @@ public class Nation {
         jsonNation.put("legatePermissions", this.legatePermissions.toJSON());
         jsonNation.put("memberPermissions", this.memberPermissions.toJSON());
         jsonNation.put("nonMemberPermissions", this.nonMemberPermissions.toJSON());
+        JSONArray enemiesArray = new JSONArray();
+        for (Integer nationID : this.enemies)
+            enemiesArray.add(nationID);
+        jsonNation.put("enemies", enemiesArray);
         return jsonNation;
     }
 }

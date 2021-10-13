@@ -22,39 +22,15 @@ public class NAVCommandExecutor implements CommandExecutor {
             String cleanCmd = cmd.getName().toLowerCase();
 
             switch (cleanCmd) {
-                case "autoclaim":
-                    return autoclaim.run(cleanPlayer, args);
-
-                case "autounclaim":
-                    return autounclaim.run(cleanPlayer, args);
-
                 case "balance":
                     return money.run(cleanPlayer, args);
 
-                case "claim":
-                    return claim.run(cleanPlayer, args);
-
-                case "demote":
-                    return demote.run(cleanPlayer, args);
-
-                case "exile":
-                    return exile.run(cleanPlayer, args);
-
-                case "invite":
+                case "nation":
                     try {
-                        return invite.run(cleanPlayer, args);
+                        return nation.run(cleanPlayer, args);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
-                case "nation":
-                    return nation.run(cleanPlayer, args);
-
-                case "promote":
-                    return promote.run(cleanPlayer, args);
-
-                case "unclaim":
-                    return unclaim.run(cleanPlayer, args);
 
                 case "sell":
                     return sell.run(cleanPlayer, args);

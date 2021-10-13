@@ -1,0 +1,7 @@
+- Prevent lumberjack from cutting down pillars of logs that do not have leaves attached (done)
+- Fix exception caused when a villager does a job when chunks are not loaded (done)
+- Add command for nations to declare each others as enemies (done)
+- Put invite and claim/unclaim commands under nation command (done)
+- Add iron golems as guards with a GUI
+- Make guards hostile to enemy players and villagers
+- Make claim chunks per dimension

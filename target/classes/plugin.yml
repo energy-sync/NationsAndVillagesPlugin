@@ -5,59 +5,17 @@ api-version: 1.13
 author: Dawson Vilamaa
 description: Allows players to create nations and villages to rule over and adds functionality to villages and villagers
 commands:
-  autoclaim:
-    aliases: ac
-    description: automatically claims chunks as you walk through them
-    usage: /autoclaim
-    permission: NationsAndVillages.autoclaim
-    permission-message: You don't have permission to use that command
-  autounclaim:
-    aliases: au
-    description: automatically unclaims chunks as you walk through them
-    usage: /autounclaim
-    permission: NationsAndVillages.autounclaim
-    permission-message: You don't have permission to use that command
   balance:
     aliases: [bal, money]
     description: shows you how much money you have
     usage: /balance
     permission: NationsAndVillages.money
     permission-message: You don't have permission to use that command
-  claim:
-    description: claims a chunk for your nation
-    usage: /claim
-    permission: NationsAndVillages.claim
-    permission-message: You don't have permission to use that command
-  demote:
-    description: demotes a member of your nation to a lower rank
-    usage: /demote <player>
-    permission: NationsAndVillages.demote
-    permission-message: You don't have permission to use that command
-  exile:
-    description: removes a member from your nation
-    usage: /exile <player>
-    permission: NationsAndVillages.exile
-    permission-message: You don't have permission to use that command
-  invite:
-    description: invites a player to your nation
-    usage: /invite <player>
-    permission: NationsAndVillages.invite
-    permission-message: You don't have permission to use that command
   nation:
-    aliases: nations
+    aliases: [nations, n]
     description: creates a nation
-    usage: /nation <create | info | join | leave | list | perms | rename> [name]
+    usage: /nation <autoclaim | autounclaim | claim | create | demote | enemy | exile | info | invite | join | leave | list | perms | promote | rename | unclaim> [name]
     permission: NationsAndVillages.nation
-    permission-message: You don't have permission to use that command
-  promote:
-    description: promotes a member of your nation to a higher rank
-    usage: /promote <user>
-    permission: NationsAndVillages.promote
-    permission-message: You don't have permission to use that command
-  unclaim:
-    description: unclaims a chunk from your nation
-    usage: /unclaim
-    permission: NationsAndVillages.unclaim
     permission-message: You don't have permission to use that command
   sell:
     description: sell the item in your hand to give to a merchant
