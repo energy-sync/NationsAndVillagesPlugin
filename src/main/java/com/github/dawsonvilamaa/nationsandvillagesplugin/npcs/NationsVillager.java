@@ -4,25 +4,33 @@ import net.minecraft.server.v1_16_R3.ChatComponentText;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.UUID;
 
 public class NationsVillager {
+    //combat constants
+    public static final double ATTACK_RANGE = 2.0;
+    public static final double BASE_DAMAGE = 1.0;
+    public static final double KNOCKBACK = 0.4;
+    public static final double ENEMY_DETECTION_RANGE = 20.0;
+
     private String name;
     private UUID uuid;
     private int nationID;
     private Job job;
     private Consumer<PlayerInteractEntityEvent> onClick;
+    private BukkitTask runnable;
 
     public enum Job {
       NONE,
@@ -43,6 +51,7 @@ public class NationsVillager {
         this.nationID = -1;
         this.job = Job.NONE;
         this.onClick = null;
+        this.runnable = null;
     }
 
     /**
@@ -53,9 +62,8 @@ public class NationsVillager {
         this.name = jsonVillager.get("name").toString();
         this.nationID = Integer.parseInt(jsonVillager.get("nationID").toString());
         this.job = Job.valueOf(jsonVillager.get("job").toString());
-        setOnClick(e -> {
-            Bukkit.broadcastMessage(this.getJob().toString());
-        });
+        this.onClick = null;
+        this.runnable = null;
     }
 
     /**
@@ -76,7 +84,6 @@ public class NationsVillager {
      * @param name
      */
     public void setName(String name) {
-        ((CraftVillager) Bukkit.getEntity(this.uuid)).getHandle().setCustomName(new ChatComponentText(name));
         this.name = name;
     }
 
@@ -106,6 +113,16 @@ public class NationsVillager {
      */
     public void setJob(Job job) {
         this.job = job;
+    }
+
+    /**
+     * Stops the villager's bukkit runnable and sets it to null
+     */
+    public void stopRunnable() {
+        if (this.runnable != null) {
+            this.runnable.cancel();
+            this.runnable = null;
+        }
     }
 
     /**
@@ -167,30 +184,114 @@ public class NationsVillager {
     }
 
     /**
-     * Displays the villager's health as a custom name tag if the health is below its max health. Displays name if healed
+     * Makes the villager look at a location
+     * @param location
+     * @param villager
      */
-    public void updateHealthTag() {
-        CraftVillager villager = (CraftVillager) Bukkit.getEntity(this.uuid);
-        if (villager.getHealth() < villager.getMaxHealth() - 0.5) {
-            ((CraftVillager) Bukkit.getEntity(this.uuid)).getHandle().setCustomName(new ChatComponentText(ChatColor.RED + "❤ " + ChatColor.RESET + (int) Math.round(villager.getHealth()) + "/" + (int) villager.getMaxHealth()));
-            villager.setCustomNameVisible(true);
-        }
-        else {
-            setName(this.name);
-            villager.setCustomNameVisible(false);
-        }
+    void lookAtLocation(Location location, Entity villager) {
+        Vector lookAt = location.toVector().subtract(villager.getLocation().toVector());
+        Location loc = villager.getLocation();
+        loc.setDirection(lookAt);
+        villager.teleport(loc);
     }
 
     /**
      * Displays the villager's health as a custom name tag if the health is below its max health. Displays name if healed
-     * @param health
-     * @param maxHealth
      */
-    public void updateHealthTag(double health, double maxHealth) {
+    public void updateNameTag() {
+        StringBuilder nameTag = new StringBuilder();
         CraftVillager villager = (CraftVillager) Bukkit.getEntity(this.uuid);
-        if (health < maxHealth - 0.5)
-            ((CraftVillager) Bukkit.getEntity(this.uuid)).getHandle().setCustomName(new ChatComponentText(ChatColor.RED + "❤ " + ChatColor.RESET + (int) Math.round(villager.getHealth()) + "/" + (int) villager.getMaxHealth()));
-        else setName(this.name);
+
+        //if the villager's name is not the default ("Villager"), then add it to the name tag
+        if (!this.name.equals("Villager")) nameTag.append(this.name);
+
+        //if the villager's health is below its max health, add the health to the name tag
+        if (villager.getHealth() < villager.getMaxHealth() - 0.5)
+            nameTag.append(ChatColor.RED).append(" ❤").append(ChatColor.RESET).append((int) villager.getHealth() > 0 ? Math.round(villager.getHealth()) : 0).append("/").append((int) villager.getMaxHealth());
+
+        if (this.job == Job.GUARD) {
+            Guard guard = (Guard) this;
+
+            //if the guard has a sword, add a sword icon to the name tag
+            if (guard.getWeapon() != null) {
+                switch (guard.getWeapon().getType()) {
+                    case STONE_SWORD:
+                        nameTag.append(ChatColor.DARK_GRAY);
+                        break;
+
+                    case IRON_SWORD:
+                        nameTag.append(ChatColor.GRAY);
+                        break;
+
+                    case GOLDEN_SWORD:
+                        nameTag.append(ChatColor.YELLOW);
+                        break;
+
+                    case DIAMOND_SWORD:
+                        nameTag.append(ChatColor.AQUA);
+                        break;
+
+                    case NETHERITE_SWORD:
+                        nameTag.append(ChatColor.BLACK);
+                        break;
+                }
+                nameTag.append(" \uD83D\uDDE1");
+            }
+
+            //if the guard has armor, add an armor icon to the name tag
+            ItemStack[] armor = guard.getArmor();
+            Material armorType = null;
+
+            //chestplate
+            if (armor[1] != null)
+                armorType = armor[1].getType();
+            //leggings
+            else if (armor[2] != null)
+                armorType = armor[2].getType();
+            //helmet
+            else if (armor[0] != null)
+                armorType = armor[0].getType();
+            //boots
+            else if (armor[3] != null)
+                armorType = armor[3].getType();
+
+            if (armorType != null) {
+                String armorTypeStr = armorType.toString();
+                //chainmail
+                if (armorTypeStr.contains("CHAINMAIL"))
+                    nameTag.append(ChatColor.DARK_GRAY);
+                //iron
+                else if (armorTypeStr.contains("IRON"))
+                    nameTag.append(ChatColor.GRAY);
+                //gold
+                else if (armorTypeStr.contains("GOLDEN"))
+                    nameTag.append(ChatColor.YELLOW);
+                //diamond
+                else if (armorTypeStr.contains("DIAMOND"))
+                    nameTag.append(ChatColor.AQUA);
+                //netherite
+                else if (armorTypeStr.contains("NETHERITE"))
+                    nameTag.append(ChatColor.BLACK);
+
+                nameTag.append(" \uD83D\uDEE1");
+            }
+        }
+
+        //if the villager has a default name with no extra tags, remove the custom name tag
+        if (nameTag.equals("") && villager.getCustomName() != null)
+                villager.getHandle().setCustomName(null);
+
+        //if the villager has a custom name tag, update it
+        else villager.getHandle().setCustomName(new ChatComponentText(nameTag.toString()));
+    }
+
+    /**
+     * @param loc1
+     * @param loc2
+     * @return distance
+     */
+    double distance(Location loc1, Location loc2) {
+        return Math.sqrt(Math.pow(loc2.getX() - loc1.getX(), 2) + Math.pow(loc2.getY() - loc1.getY(), 2) + Math.pow(loc2.getZ() - loc1.getZ(), 2));
     }
 
     /**

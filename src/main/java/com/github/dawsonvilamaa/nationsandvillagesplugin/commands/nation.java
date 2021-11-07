@@ -5,11 +5,13 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.NationsManager;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
+import net.minecraft.server.v1_16_R3.EntityIronGolem;
 import net.minecraft.server.v1_16_R3.EntityVillager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftIronGolem;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -48,8 +50,9 @@ public class nation implements Command {
                     nationsPlayer.setAutoClaim(true);
                     player.sendMessage(ChatColor.YELLOW + "Auto-claiming for " + playerNation.getName() + " has been " + ChatColor.GREEN + "ENABLED");
                     NationsChunk currentChunk = nationsPlayer.getCurrentChunk();
-                    if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ()) == null)
-                        claim.run(player, new String[0]);
+                    if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld()) == null)
+                        nation.run(player, new String[] {"claim"});
+                        //claim.run(player, new String[0]);
                 }
                 else {
                     nationsPlayer.setAutoClaim(false);
@@ -68,9 +71,9 @@ public class nation implements Command {
                     nationsPlayer.setAutoUnclaim(true);
                     player.sendMessage(ChatColor.YELLOW + "Auto-unclaiming for " + playerNation.getName() + " has been " + ChatColor.GREEN + "ENABLED");
                     NationsChunk currentChunk = nationsPlayer.getCurrentChunk();
-                    if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ()) != null) {
-                        if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ()).getNationID() == nationsPlayer.getNationID())
-                            unclaim.run(player, new String[0]);
+                    if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld()) != null) {
+                        if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld()).getNationID() == nationsPlayer.getNationID())
+                            nation.run(player, new String[] {"unclaim"});
                     }
                 }
                 else {
@@ -86,7 +89,7 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You must be in a nation to claim land");
                 else {
                     //check if nationsPlayer has permission to claim land
-                    if (!playerNation.getPermissionByRank(nationsPlayer.getRank()).canClaimLand()) {
+                    if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canClaimLand()) {
                         player.sendMessage(ChatColor.RED + "You do not have permission to claim land for your nation");
                         return true;
                     }
@@ -94,7 +97,7 @@ public class nation implements Command {
                     Chunk currentChunk = player.getLocation().getChunk();
                     //check if chunk is already claimed
                     for (NationsChunk chunk : Main.nationsManager.getChunks()) {
-                        if (chunk.getX() == currentChunk.getX() && chunk.getZ() == currentChunk.getZ()) {
+                        if (chunk.getX() == currentChunk.getX() && chunk.getZ() == currentChunk.getZ() && chunk.getWorldName().equals(currentChunk.getWorld().getName())) {
                             player.sendMessage(ChatColor.RED + "This chunk is already claimed");
                             return true;
                         }
@@ -108,13 +111,13 @@ public class nation implements Command {
                     }
                     else {
                         //claim chunk
-                        Main.nationsManager.addChunk(currentChunk.getX(), currentChunk.getZ(), nationsPlayer.getNationID());
+                        Main.nationsManager.addChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), nationsPlayer.getNationID());
                         nationsPlayer.removeMoney(chunkCost);
                         playerNation.incrementChunks();
                         player.sendMessage(ChatColor.GREEN + "Claimed this chunk for " + playerNation.getName() + " for $" + chunkCost);
-                        nationsPlayer.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), nationsPlayer.getNationID())); //update currentChunk
+                        nationsPlayer.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), nationsPlayer.getNationID())); //update currentChunk
 
-                        //update all villagers in the chunk
+                        //update all villagers and iron golems in the chunk
                         for (Entity entity : currentChunk.getEntities()) {
                             if (entity instanceof CraftVillager) {
                                 EntityVillager villager = ((CraftVillager) entity).getHandle();
@@ -123,10 +126,31 @@ public class nation implements Command {
                                     playerNation.incrementPopulation();
                                 }
                             }
+                            else if (entity instanceof CraftIronGolem) {
+                                EntityIronGolem golem = ((CraftIronGolem) entity).getHandle();
+                                if (Main.nationsManager.getGolemByUUID(golem.getUniqueID()).getNationID() != nationsPlayer.getNationID())
+                                    Main.nationsManager.getGolemByUUID(golem.getUniqueID()).setNationID(nationsPlayer.getNationID());
+                            }
                         }
                     }
 
                 }
+                return true;
+
+            case "config":
+            case "settings":
+                //check if player is in a nation
+                if (nationsPlayer.getNationID() == -1) {
+                    player.sendMessage(ChatColor.RED + "You are not in a nation");
+                    return true;
+                }
+                //check if player has permission to access config for their nation
+                if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canAccessConfig()) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to change settings for your nation");
+                    return true;
+                }
+                //show menu
+                configMenu(player);
                 return true;
 
             case "create":
@@ -163,7 +187,7 @@ public class nation implements Command {
                     return true;
                 }
                 //check if NationsPlayer has permission to demote members
-                if (!playerNation.getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
+                if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
                     return true;
                 }
@@ -210,13 +234,18 @@ public class nation implements Command {
                     return true;
                 }
                 //check if player has permission to manage nation
-                if (!playerNation.getPermissionByRank(nationsPlayer.getRank()).canDeclareEnemies()) {
+                if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canDeclareEnemies()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to declare enemies");
                     return true;
                 }
                 //check if enemy nation exists
                 if (argNation == null) {
                     player.sendMessage(ChatColor.RED + "No nation of that name exists");
+                    return true;
+                }
+                //check if player is trying to declare own nation as an enemy
+                if (playerNation.getID() == argNation.getID()) {
+                    player.sendMessage(ChatColor.RED + "You cannot declare your own nation as an enemy");
                     return true;
                 }
                 //declare or undeclare enemy
@@ -263,7 +292,7 @@ public class nation implements Command {
                     return true;
                 }
                 //check if nationsPlayer has permission to exile members
-                if (!playerNation.getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
+                if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
                     return true;
                 }
@@ -353,7 +382,7 @@ public class nation implements Command {
                     return true;
                 }
                 //check if nationsPlayer has permission to invite members
-                if (!playerNation.getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
+                if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to invite members to your nation");
                     return true;
                 }
@@ -460,21 +489,6 @@ public class nation implements Command {
                 } else
                     player.sendMessage(ChatColor.YELLOW + "There are no nations");
                 return true;
-
-            case "permissions":
-            case "perms":
-                //check if player is in a nation
-                if (nationsPlayer.getNationID() == -1) {
-                    player.sendMessage(ChatColor.RED + "You are not in a nation");
-                    return true;
-                }
-                //check if player has permission to edit permissions
-                if (!playerNation.getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
-                    player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
-                    return true;
-                }
-                ranksMenu(player);
-                return true;
                 
             case "promote":
                 if (args.length < 2)
@@ -486,7 +500,7 @@ public class nation implements Command {
                     return true;
                 }
                 //check if nationsPlayer has permission to promote members
-                if (!playerNation.getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
+                if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
                     return true;
                 }
@@ -555,7 +569,7 @@ public class nation implements Command {
                 }
 
                 //check if nationsPlayer has permission to claim land
-                if (!playerNation.getPermissionByRank(nationsPlayer.getRank()).canClaimLand()) {
+                if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canClaimLand()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to unclaim land from your nation");
                     return true;
                 }
@@ -563,7 +577,7 @@ public class nation implements Command {
                 Chunk currentChunk = player.getLocation().getChunk();
                 //check if chunk is claimed
                 for (NationsChunk chunk : Main.nationsManager.getChunks()) {
-                    if (chunk.getX() == currentChunk.getX() && chunk.getZ() == currentChunk.getZ()) {
+                    if (chunk.getX() == currentChunk.getX() && chunk.getZ() == currentChunk.getZ() && chunk.getWorldName().equals(player.getWorld().getName())) {
                         //check if nationsPlayer's nation owns this chunk
                         if (chunk.getNationID() == nationsPlayer.getNationID()) {
                             //unclaim chunk
@@ -572,8 +586,9 @@ public class nation implements Command {
                             int chunkCost = (NationsManager.chunkCost * Main.nationsManager.getNationByID(nationsPlayer.getNationID()).getNumChunks()) + NationsManager.chunkCost;
                             nationsPlayer.addMoney(chunkCost);
                             player.sendMessage(ChatColor.GREEN + "Unclaimed this chunk from " + Main.nationsManager.getNationByID(nationsPlayer.getNationID()).getName() + ". You received $" + chunkCost);
-                            nationsPlayer.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), -1)); //update currentChunk
-                            //update all villagers in the chunk
+                            nationsPlayer.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), -1)); //update currentChunk
+
+                            //update all villagers and iron golems in the chunk
                             for (Entity entity : currentChunk.getEntities()) {
                                 if (entity instanceof CraftVillager) {
                                     EntityVillager villager = ((CraftVillager) entity).getHandle();
@@ -581,6 +596,11 @@ public class nation implements Command {
                                         Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).setNationID(-1);
                                         Main.nationsManager.getNationByID(nationsPlayer.getNationID()).decrementPopulation();
                                     }
+                                }
+                                else if (entity instanceof CraftIronGolem) {
+                                    EntityIronGolem golem = ((CraftIronGolem) entity).getHandle();
+                                    if (Main.nationsManager.getGolemByUUID(golem.getUniqueID()).getNationID() == nationsPlayer.getNationID())
+                                        Main.nationsManager.getGolemByUUID(golem.getUniqueID()).setNationID(-1);
                                 }
                             }
                         }
@@ -596,10 +616,38 @@ public class nation implements Command {
         return false;
     }
 
+    //GUI for nation config/settings
+    public static void configMenu(Player player) {
+        Nation nation = nationsManager.getNationByID(nationsManager.getPlayerByUUID(player.getUniqueId()).getNationID());
+        InventoryGUI gui = new InventoryGUI(player, "Nation Settings", 1, true);
+        //permissions button - opens rank menu
+        InventoryGUIButton permsButton = new InventoryGUIButton(gui, "Manage Permissions", "Edit permissions for different ranks of your nation", Material.PLAYER_HEAD);
+        permsButton.setOnClick(e -> ranksMenu(player));
+        gui.addButton(permsButton);
+        //iron golem attack button
+        String golemButtonDescription = " - Toggle iron golems attacking\nplayers and villagers of enemy nations";
+        InventoryGUIButton golemButton = new InventoryGUIButton(gui, "Iron Golems Attack Enemies", (nation.getConfig().getGolemsAttackEnemies() ? ChatColor.GREEN + "ENABLED" : ChatColor.RED + "DISABLED") + ChatColor.RESET + golemButtonDescription, Material.POPPY);
+        golemButton.setOnClick(e -> {
+            nation.getConfig().setGolemsAttackEnemies(!nation.getConfig().getGolemsAttackEnemies());
+            golemButton.setDescription((nation.getConfig().getGolemsAttackEnemies() ? ChatColor.GREEN + "ENABLED" : ChatColor.RED + "DISABLED") + ChatColor.RESET + golemButtonDescription);
+        });
+        gui.addButton(golemButton);
+        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 7);
+        gui.showMenu();
+    }
+
     //GUI to choose rank
     public static void ranksMenu(Player player) {
         InventoryGUI gui = new InventoryGUI(player, "Ranks", 1, true);
-        gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 3);
+        gui.addButton(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE));
+        //back button
+        InventoryGUIButton backButton = new InventoryGUIButton(gui, "Back", null, Material.ARROW);
+        backButton.setOnClick(e -> {
+            gui.removeAllClickEvents();
+            configMenu(player);
+        });
+        gui.addButton(backButton);
+        gui.addButton(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE));
         //legate
         InventoryGUIButton legateButton = new InventoryGUIButton(gui, "Legate", null, Material.DIAMOND);
         legateButton.setOnClick(e -> permsMenu(player, NationsManager.Rank.LEGATE));
@@ -619,7 +667,7 @@ public class nation implements Command {
     //GUI to edit permissions for nation
     public static void permsMenu(Player player, NationsManager.Rank rank) {
         Nation nation = nationsManager.getNationByID(nationsManager.getPlayerByUUID(player.getUniqueId()).getNationID());
-        NationsPermission perms = nation.getPermissionByRank(rank);
+        NationsPermission perms = nation.getConfig().getPermissionByRank(rank);
         InventoryGUI gui = new InventoryGUI(player, rank + " Permissions", 1, true);
         //back button
         InventoryGUIButton backButton = new InventoryGUIButton(gui, "Back", null, Material.ARROW);
@@ -636,7 +684,7 @@ public class nation implements Command {
         modifyBlocksButton.setOnClick(e -> {
             perms.setModifyBlocks(!perms.canModifyBlocks());
             modifyBlocksButton.setDescription(isAllowed(perms.canModifyBlocks()));
-            nation.setPermissionByRank(rank, perms);
+            nation.getConfig().setPermissionByRank(rank, perms);
         });
         gui.addButton(modifyBlocksButton);
 
@@ -645,7 +693,7 @@ public class nation implements Command {
         openContainersButton.setOnClick(e -> {
             perms.setOpenContainers(!perms.canOpenContainers());
             openContainersButton.setDescription(isAllowed(perms.canOpenContainers()));
-            nation.setPermissionByRank(rank, perms);
+            nation.getConfig().setPermissionByRank(rank, perms);
         });
         gui.addButton(openContainersButton);
 
@@ -654,7 +702,7 @@ public class nation implements Command {
         attackMobsButton.setOnClick(e -> {
             perms.setAttackEntities(!perms.canAttackEntities());
             attackMobsButton.setDescription(isAllowed(perms.canAttackEntities()));
-            nation.setPermissionByRank(rank, perms);
+            nation.getConfig().setPermissionByRank(rank, perms);
         });
         gui.addButton(attackMobsButton);
 
@@ -663,7 +711,7 @@ public class nation implements Command {
         claimLandButton.setOnClick(e -> {
             perms.setClaimLand(!perms.canClaimLand());
             claimLandButton.setDescription(isAllowed(perms.canClaimLand()));
-            nation.setPermissionByRank(rank, perms);
+            nation.getConfig().setPermissionByRank(rank, perms);
         });
         gui.addButton(claimLandButton);
 
@@ -672,7 +720,7 @@ public class nation implements Command {
         manageMembersButton.setOnClick(e -> {
             perms.setManageMembers(!perms.canManageMembers());
             manageMembersButton.setDescription(isAllowed(perms.canClaimLand()));
-            nation.setPermissionByRank(rank, perms);
+            nation.getConfig().setPermissionByRank(rank, perms);
         });
         gui.addButton(manageMembersButton);
 
@@ -681,7 +729,7 @@ public class nation implements Command {
         declareEnemiesButton.setOnClick(e -> {
             perms.setDeclareEnemies(!perms.canDeclareEnemies());
             declareEnemiesButton.setDescription(isAllowed(perms.canDeclareEnemies()));
-            nation.setPermissionByRank(rank, perms);
+            nation.getConfig().setPermissionByRank(rank, perms);
         });
         gui.addButton(declareEnemiesButton);
 

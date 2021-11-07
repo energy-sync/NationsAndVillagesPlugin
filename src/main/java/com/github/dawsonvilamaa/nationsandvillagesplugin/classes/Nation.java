@@ -20,12 +20,8 @@ public class Nation {
     private ArrayList<UUID> members;
     private int population;
     private int chunks;
+    private NationsConfig config;
     private ArrayList<Integer> enemies;
-
-    //permissions
-    NationsPermission legatePermissions;
-    NationsPermission memberPermissions;
-    NationsPermission nonMemberPermissions;
 
     ArrayList<UUID> invitedPlayers;
 
@@ -40,9 +36,7 @@ public class Nation {
         this.members = new ArrayList<>();
         this.population = 0;
         this.chunks = 0;
-        this.legatePermissions = new NationsPermission(NationsManager.Rank.LEGATE);
-        this.memberPermissions = new NationsPermission(NationsManager.Rank.MEMBER);
-        this.nonMemberPermissions = new NationsPermission(NationsManager.Rank.NONMEMBER);
+        this.config = new NationsConfig();
         this.enemies = new ArrayList<>();
         this.invitedPlayers = new ArrayList<>();
     }
@@ -57,9 +51,7 @@ public class Nation {
             this.members.add(UUID.fromString(member.toString()));
         this.population = Integer.parseInt(jsonNation.get("population").toString());
         this.chunks = Integer.parseInt(jsonNation.get("chunks").toString());
-        this.legatePermissions = new NationsPermission((JSONObject) jsonNation.get("legatePermissions"));
-        this.memberPermissions = new NationsPermission((JSONObject) jsonNation.get("memberPermissions"));
-        this.nonMemberPermissions = new NationsPermission((JSONObject) jsonNation.get("nonMemberPermissions"));
+        this.config = new NationsConfig(jsonNation);
         this.enemies = new ArrayList<>();
         ArrayList<Object> enemiesArray = ((JSONArray) jsonNation.get("enemies"));
         for (Object nationID : enemiesArray)
@@ -144,7 +136,7 @@ public class Nation {
      * @param enemyNationID
      */
     public void removeEnemy(int enemyNationID) {
-        this.enemies.remove(enemyNationID);
+        this.enemies.remove(Integer.valueOf(enemyNationID));
     }
 
     /**
@@ -153,6 +145,8 @@ public class Nation {
      * @return
      */
     public boolean isEnemy(int enemyNationID) {
+        if (enemyNationID == -1)
+            return false;
         return this.enemies.contains(enemyNationID);
     }
 
@@ -195,39 +189,17 @@ public class Nation {
     }
 
     /**
-     * Returns the NationsPermission of a given rank in this nation
-     * @param rank
-     * @return NationsPermission
+     * @return config
      */
-    public NationsPermission getPermissionByRank(NationsManager.Rank rank) {
-        switch (rank) {
-            case LEADER:
-                return new NationsPermission(NationsManager.Rank.LEADER);
-            case LEGATE:
-                return this.legatePermissions;
-            case MEMBER:
-                return this.memberPermissions;
-            case NONMEMBER:
-                return this.nonMemberPermissions;
-            default:
-                return null;
-        }
+    public NationsConfig getConfig() {
+        return this.config;
     }
 
-    public void setPermissionByRank(NationsManager.Rank rank, NationsPermission perms) {
-        switch (rank) {
-            case LEGATE:
-                this.legatePermissions = perms;
-            break;
-
-            case MEMBER:
-                this.memberPermissions = perms;
-            break;
-
-            case NONMEMBER:
-                this.nonMemberPermissions = perms;
-            break;
-        }
+    /**
+     * @param config
+     */
+    public void setConfig(NationsConfig config) {
+        this.config = config;
     }
 
     /**
@@ -282,9 +254,10 @@ public class Nation {
         jsonNation.put("members", membersArray);
         jsonNation.put("population", String.valueOf(this.population));
         jsonNation.put("chunks", String.valueOf(this.chunks));
-        jsonNation.put("legatePermissions", this.legatePermissions.toJSON());
-        jsonNation.put("memberPermissions", this.memberPermissions.toJSON());
-        jsonNation.put("nonMemberPermissions", this.nonMemberPermissions.toJSON());
+        jsonNation.put("legatePermissions", this.config.getPermissionByRank(NationsManager.Rank.LEGATE).toJSON());
+        jsonNation.put("memberPermissions", this.config.getPermissionByRank(NationsManager.Rank.MEMBER).toJSON());
+        jsonNation.put("nonMemberPermissions", this.config.getPermissionByRank(NationsManager.Rank.NONMEMBER).toJSON());
+        jsonNation.put("golemsAttackEnemies", String.valueOf(this.config.getGolemsAttackEnemies()));
         JSONArray enemiesArray = new JSONArray();
         for (Integer nationID : this.enemies)
             enemiesArray.add(nationID);

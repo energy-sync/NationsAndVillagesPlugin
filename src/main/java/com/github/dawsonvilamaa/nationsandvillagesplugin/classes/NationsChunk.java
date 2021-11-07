@@ -1,10 +1,13 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.classes;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.json.simple.JSONObject;
 
 public class NationsChunk {
     private int x;
     private int z;
+    private String worldName;
     private int nationID;
 
     /**
@@ -12,9 +15,10 @@ public class NationsChunk {
      * @param z
      * @param nationID
      */
-    public NationsChunk(int x, int z, int nationID) {
+    public NationsChunk(int x, int z, World world, int nationID) {
         this.x = x;
         this.z = z;
+        this.worldName = world.getName();
         this.nationID = nationID;
     }
 
@@ -56,6 +60,27 @@ public class NationsChunk {
     }
 
     /**
+     * @return worldName
+     */
+    public String getWorldName() {
+        return this.worldName;
+    }
+
+    /**
+     * @return world
+     */
+    public World getWorld() {
+        return Bukkit.getWorld(this.worldName);
+    }
+
+    /**
+     * @param worldName
+     */
+    public void setWorldName(String worldName) {
+        this.worldName = worldName;
+    }
+
+    /**
      * @return nationID
      */
     public int getNationID() {
@@ -77,6 +102,7 @@ public class NationsChunk {
         JSONObject jsonChunk = new JSONObject();
         jsonChunk.put("x", String.valueOf(this.x));
         jsonChunk.put("z", String.valueOf(this.z));
+        jsonChunk.put("world", this.worldName);
         jsonChunk.put("nationID", String.valueOf(this.nationID));
         return jsonChunk;
     }

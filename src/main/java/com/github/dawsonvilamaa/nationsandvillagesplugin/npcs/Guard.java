@@ -1,16 +1,20 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.npcs;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
+import net.minecraft.server.v1_16_R3.EntityHuman;
+import net.minecraft.server.v1_16_R3.EntityIronGolem;
+import net.minecraft.server.v1_16_R3.PathfinderGoalNearestAttackableTarget;
 import org.bukkit.*;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftIronGolem;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -24,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Guard extends NationsVillager {
-    static final int RADIUS = 20;
+    public static final EntityType HOSTILE_MOBS[] = new EntityType[] { EntityType.BLAZE, EntityType.CREEPER, EntityType.DROWNED, EntityType.ENDERMITE, EntityType.EVOKER, EntityType.HUSK, EntityType.MAGMA_CUBE, EntityType.PILLAGER, EntityType.RAVAGER, EntityType.SILVERFISH, EntityType.SKELETON, EntityType.SLIME, EntityType.SPIDER, EntityType.STRAY, EntityType.VINDICATOR, EntityType.WITCH, EntityType.WITHER_SKELETON, EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER, EntityType.HOGLIN, EntityType.CAVE_SPIDER, EntityType.ZOGLIN };
     public enum GuardMode { STATIONARY, WANDER, BODYGUARD, FOLLOW };
 
     GuardMode guardMode;
@@ -32,7 +36,7 @@ public class Guard extends NationsVillager {
     Player followPlayer;
     ItemStack weapon;
     ItemStack[] armor;
-    int ticks;
+    private int ticks;
 
     private BukkitTask runnable;
 
@@ -93,6 +97,7 @@ public class Guard extends NationsVillager {
 
        JSONArray jsonArmor = (JSONArray) jsonGuard.get("armor");
        for (int i = 0; i < 4; i++) {
+           Bukkit.broadcastMessage(String.valueOf(i));
            JSONObject jsonItem = (JSONObject) jsonArmor.get(i);
            if (jsonItem == null)
                this.armor[i] = null;
@@ -105,7 +110,10 @@ public class Guard extends NationsVillager {
                Iterator<JSONObject> iterator = jsonEnchantments.iterator();
                while (iterator.hasNext()) {
                    JSONObject jsonEnchantment = iterator.next();
-                   enchantments.put(Enchantment.getByKey(NamespacedKey.minecraft(jsonEnchantment.get("name").toString())), Integer.parseInt(jsonEnchantment.get("level").toString()));
+                   enchantments.put(
+                           Enchantment.getByKey(NamespacedKey.minecraft(
+                                   jsonEnchantment.get("name").toString())),
+                           Integer.parseInt(jsonEnchantment.get("level").toString()));
                }
                this.armor[i].addEnchantments(enchantments);
            }
@@ -186,159 +194,242 @@ public class Guard extends NationsVillager {
         return this.armor;
     }
 
+    //JOB FUNCTIONS
+
     /**
-     * Stars the guard's job of attacking hostile mobs
+     * Starts the guard's job of attacking hostile mobs and enemies
      */
     public void startJob() {
-        final CraftVillager[] villager = {(CraftVillager) Bukkit.getEntity(getUniqueID())};
         this.runnable = new BukkitRunnable() {
             @Override
             public void run() {
-                Entity vEntity = Bukkit.getEntity(getUniqueID());
-                if (vEntity != null && vEntity.getLocation().getChunk().isLoaded()) {
+                CraftVillager villager = (CraftVillager) Bukkit.getEntity(getUniqueID());
+                if (villager == null)
+                    stopJob();
+                if (villager.getLocation().getChunk().isLoaded()) {
+                    NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(getUniqueID());
                     ticks++;
-                    //regenerate health
-                    if (villager[0] == null)
-                        villager[0] = (CraftVillager) Bukkit.getEntity(getUniqueID());
-                    if (villager[0] != null) {
-                        if (villager[0].getHealth() < 20 && ticks % 8 == 0) {
-                            if (villager[0].getMaxHealth() - villager[0].getHealth() < 0.5)
-                                villager[0].setHealth(villager[0].getMaxHealth());
-                            else villager[0].setHealth(villager[0].getHealth() + 0.5);
-                        }
-                        Main.nationsManager.getVillagerByUUID(villager[0].getUniqueId()).updateHealthTag();
+                    regenerateHealth(villager);
 
-                        //follow mode
-                        if (guardMode == GuardMode.FOLLOW && distance(villager[0].getLocation(), followPlayer.getLocation()) > 3)
-                            walkToLocation(followPlayer.getLocation());
-                        else {
-                            //find nearby hostile enemies
-                            List<Entity> nearbyEntities = villager[0].getNearbyEntities(guardMode == GuardMode.FOLLOW ? RADIUS / 2 : RADIUS, 2, guardMode == GuardMode.FOLLOW ? RADIUS / 2 : RADIUS);
-                            if (nearbyEntities.size() > 0) {
-                                EntityType hostileMobs[] = new EntityType[] { EntityType.BLAZE, EntityType.CREEPER, EntityType.DROWNED, EntityType.ENDERMITE, EntityType.EVOKER, EntityType.HUSK, EntityType.MAGMA_CUBE, EntityType.PILLAGER, EntityType.RAVAGER, EntityType.SILVERFISH, EntityType.SKELETON, EntityType.SLIME, EntityType.SPIDER, EntityType.STRAY, EntityType.VINDICATOR, EntityType.WITCH, EntityType.WITHER_SKELETON, EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER, EntityType.HOGLIN, EntityType.CAVE_SPIDER, EntityType.ZOGLIN };
-                                ArrayList<Map.Entry<Entity, Double>> closestMobs = new ArrayList<>();
-                                for (Entity entity : nearbyEntities) {
-                                    for (EntityType mob : hostileMobs) {
-                                        if (entity.getType() == mob) {
-                                            Location villagerLoc = villager[0].getLocation();
-                                            Location mobLoc = entity.getLocation();
-                                            double distance = distance(villagerLoc, mobLoc);
-                                            closestMobs.add(new AbstractMap.SimpleEntry<>(entity, distance));
-                                        }
-                                    }
+                    //follow mode
+                    if (guardMode == GuardMode.FOLLOW && distance(villager.getLocation(), followPlayer.getLocation()) > 3)
+                        walkToLocation(followPlayer.getLocation());
+                    else {
+                        //find nearby hostile enemies
+                        List<Entity> nearbyEntities = villager.getNearbyEntities(guardMode == GuardMode.FOLLOW ? ENEMY_DETECTION_RANGE / 2 : ENEMY_DETECTION_RANGE, 2, guardMode == GuardMode.FOLLOW ? ENEMY_DETECTION_RANGE / 2 : ENEMY_DETECTION_RANGE);
+                        if (nearbyEntities.size() > 0) {
+                            Map.Entry<Entity, Double> closestEntity = getClosestEnemy(villager, nationsVillager.getNationID());
+                            if (closestEntity != null) {
+                                //attack enemy
+                                Entity enemy = closestEntity.getKey();
+                                if (closestEntity.getValue() <= (enemy.getType() == EntityType.IRON_GOLEM ? 3 : ATTACK_RANGE) && ticks % 4 == 0) {
+                                    attackEnemy(villager, enemy);
+                                    makeEnemyRetaliate(villager, enemy);
                                 }
-                                if (closestMobs.size() > 0) {
-                                    closestMobs.sort(Comparator.comparing(Map.Entry::getValue));
-                                    Entity mob = closestMobs.get(0).getKey();
-                                    //attack mob
-                                    if (closestMobs.get(0).getValue() <= 2.0 && ticks % 4 == 0) {
-                                        lookAtLocation(mob.getLocation(), villager[0]);
-                                        double damageAmount;
-                                        double xDir = villager[0].getLocation().getX() - mob.getLocation().getX() >= 0 ? 1 : -1;
-                                        double zDir = villager[0].getLocation().getZ() - mob.getLocation().getZ() >= 0 ? 1 : -1;
-                                        Vector knockbackVector = new Vector(0.4 * xDir, -0.25, 0.4 * zDir);
-                                        knockbackVector.multiply(-1);
-                                        //knockbackVector.normalize();
-
-                                        //base damage
-                                        if (weapon == null)
-                                            damageAmount = 2;
-                                        else {
-                                            switch (weapon.getType()) {
-                                                case WOODEN_SWORD:
-                                                case GOLDEN_SWORD:
-                                                    damageAmount = 4;
-                                                    break;
-
-                                                case STONE_SWORD:
-                                                    damageAmount = 5;
-                                                    break;
-
-                                                case IRON_SWORD:
-                                                    damageAmount = 6;
-                                                    break;
-
-                                                case DIAMOND_SWORD:
-                                                    damageAmount = 7;
-                                                    break;
-
-                                                case NETHERITE_SWORD:
-                                                    damageAmount = 8;
-                                                    break;
-
-                                                default:
-                                                    damageAmount = 2;
-                                            }
-
-                                            //enchantments
-                                            for (Enchantment enchantment : weapon.getEnchantments().keySet()) {
-                                                int level = weapon.getEnchantmentLevel(enchantment);
-                                                switch(enchantment.getKey().toString()) {
-                                                    case "minecraft:bane_of_arthropods":
-                                                        if (mob.getType() == EntityType.SPIDER || mob.getType() == EntityType.CAVE_SPIDER || mob.getType() == EntityType.SILVERFISH || mob.getType() == EntityType.ENDERMITE) {
-                                                            damageAmount += 2.5 * level;
-                                                            double slownessLength = ThreadLocalRandom.current().nextDouble(1, 2 + (0.5 * level));
-                                                            ((LivingEntity) mob).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) Math.round(slownessLength * 20), 4, false, true));
-                                                        }
-                                                        break;
-
-                                                    case "minecraft:fire_aspect":
-                                                        mob.setFireTicks(80 * level);
-                                                        break;
-
-                                                    case "minecraft:knockback":
-                                                        knockbackVector.add(new Vector(0.4 * level * xDir * -1, 0, 0.4 * level * zDir * -1));
-                                                        break;
-
-                                                    case "minecraft:sharpness":
-                                                        damageAmount += 0.5 * level + 0.5;
-                                                        break;
-
-                                                    case "minecraft:smite":
-                                                        if (mob.getType() == EntityType.SKELETON || mob.getType() == EntityType.ZOMBIE || mob.getType() == EntityType.ZOMBIE_VILLAGER || mob.getType() == EntityType.WITHER || mob.getType() == EntityType.WITHER_SKELETON || mob.getType() == EntityType.STRAY || mob.getType() == EntityType.HUSK || mob.getType() == EntityType.DROWNED || mob.getType() == EntityType.ZOGLIN) {
-                                                            damageAmount += 2.5 * level;
-                                                        }
-                                                        break;
-                                                }
-                                            }
-                                        }
-
-                                        ((LivingEntity) mob).damage(damageAmount);
-                                        mob.setVelocity(knockbackVector);
-                                        ((Monster) mob).setTarget((LivingEntity) villager[0]);
-                                    }
-                                    else {
-                                        //run to mob
-                                        if (guardMode == GuardMode.STATIONARY && distance(guardLocation, mob.getLocation()) <= 20) {
-                                            lookAtLocation(mob.getLocation(), villager[0]);
-                                            runToLocation(mob.getLocation());
-                                        }
-                                        else if ((guardMode == GuardMode.BODYGUARD) && distance(mob.getLocation(), followPlayer.getLocation()) <= 10) {
-                                            lookAtLocation(mob.getLocation(), villager[0]);
-                                            runToLocation(mob.getLocation());
-                                        }
-                                        else if (guardMode == GuardMode.WANDER && distance(villager[0].getLocation(), mob.getLocation()) <= 15) {
-                                            lookAtLocation(mob.getLocation(), villager[0]);
-                                            runToLocation(mob.getLocation());
-                                        }
-                                        else returnToStart(villager[0]);
-                                    }
-                                }
-                                else {
-                                    returnToStart(villager[0]);
-                                }
+                                else moveToNextPosition(villager, enemy);
                             }
+                            else returnToStart(villager);
                         }
-                        if (ticks >= 8)
-                            ticks = 0;
                     }
+                    if (ticks >= 8)
+                        ticks = 0;
                 }
             }
         }.runTaskTimer(Main.plugin, 20, 5);
     }
 
     /**
-     * Stops the guard's job of attacking hostile mobs
+     * Regenerates the guard's health and updates its name tag
+     * @param villager
+     */
+    public void regenerateHealth(CraftVillager villager){
+        if (villager.getHealth() < 20 && ticks % 8 == 0) {
+            if (villager.getMaxHealth() - villager.getHealth() < 0.5)
+                villager.setHealth(villager.getMaxHealth());
+            else villager.setHealth(villager.getHealth() + 0.5);
+        }
+
+        NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueId());
+        nationsVillager.updateNameTag();
+    }
+
+    /**
+     * Gets all enemies (hostile mobs, enemy players, villagers, and iron golems) within a certain radius of the guard and returns the closest one
+     * @param villager
+     * @param nationID
+     * @return closestEntity
+     */
+    public Map.Entry<Entity, Double> getClosestEnemy(CraftVillager villager, int nationID) {
+        List<Entity> nearbyEntities = villager.getNearbyEntities(ENEMY_DETECTION_RANGE, 2, ENEMY_DETECTION_RANGE);
+
+        if (nearbyEntities.size() == 0)
+            return null;
+
+        Map.Entry<Entity, Double> closestEntity = null;
+        Nation villagerNation = Main.nationsManager.getNationByID(nationID);
+        for (Entity entity : nearbyEntities) {
+            boolean isEnemy = false;
+
+            //villager
+            if (entity.getType() == EntityType.VILLAGER && villagerNation.isEnemy(Main.nationsManager.getVillagerByUUID(entity.getUniqueId()).getNationID()))
+                isEnemy = true;
+
+            //iron golem
+            else if (entity.getType() == EntityType.IRON_GOLEM && villagerNation.isEnemy(Main.nationsManager.getGolemByUUID(entity.getUniqueId()).getNationID()))
+                isEnemy = true;
+
+            //player
+            else if (entity.getType() == EntityType.PLAYER && villagerNation.isEnemy(Main.nationsManager.getPlayerByUUID(entity.getUniqueId()).getNationID()))
+                isEnemy = true;
+
+            //hostile mobs
+            else {
+                for (EntityType entityType : HOSTILE_MOBS) {
+                    if (entity.getType() == entityType)
+                        isEnemy = true;
+                }
+            }
+
+            //set closest entity
+            if (isEnemy) {
+                double dist = distance(villager.getLocation(), entity.getLocation());
+                if (closestEntity == null || dist < closestEntity.getValue())
+                    closestEntity = new AbstractMap.SimpleEntry<>(entity, dist);
+            }
+        }
+        return closestEntity;
+    }
+
+    /**
+     * Makes guard attack an entity, taking its weapon stats into account
+     * @param villager
+     * @param enemy
+     */
+    public void attackEnemy(CraftVillager villager, Entity enemy) {
+        //look at enemy
+        lookAtLocation(enemy.getLocation(), villager);
+
+        //get knockback vector
+        double xDir = villager.getLocation().getX() - enemy.getLocation().getX() >= 0 ? 1 : -1;
+        double zDir = villager.getLocation().getZ() - enemy.getLocation().getZ() >= 0 ? 1 : -1;
+        Vector knockbackVector = new Vector(0.4 * xDir, -0.25, 0.4 * zDir);
+        knockbackVector.multiply(-1);
+
+        //base damage
+        double damageAmount;
+        if (weapon == null)
+            damageAmount = 2;
+        else {
+            switch (weapon.getType()) {
+                case WOODEN_SWORD:
+                case GOLDEN_SWORD:
+                    damageAmount = 4;
+                    break;
+
+                case STONE_SWORD:
+                    damageAmount = 5;
+                    break;
+
+                case IRON_SWORD:
+                    damageAmount = 6;
+                    break;
+
+                case DIAMOND_SWORD:
+                    damageAmount = 7;
+                    break;
+
+                case NETHERITE_SWORD:
+                    damageAmount = 8;
+                    break;
+
+                default:
+                    damageAmount = 2;
+            }
+
+            //enchantments
+            for (Enchantment enchantment : weapon.getEnchantments().keySet()) {
+                int level = weapon.getEnchantmentLevel(enchantment);
+                switch(enchantment.getKey().toString()) {
+                    case "minecraft:bane_of_arthropods":
+                        if (enemy.getType() == EntityType.SPIDER || enemy.getType() == EntityType.CAVE_SPIDER || enemy.getType() == EntityType.SILVERFISH || enemy.getType() == EntityType.ENDERMITE) {
+                            damageAmount += 2.5 * level;
+                            double slownessLength = ThreadLocalRandom.current().nextDouble(1, 2 + (0.5 * level));
+                            ((LivingEntity) enemy).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) Math.round(slownessLength * 20), 4, false, true));
+                        }
+                        break;
+
+                    case "minecraft:fire_aspect":
+                        enemy.setFireTicks(80 * level);
+                        break;
+
+                    case "minecraft:knockback":
+                        knockbackVector.add(new Vector(0.4 * level * xDir * -1, 0, 0.4 * level * zDir * -1));
+                        break;
+
+                    case "minecraft:sharpness":
+                        damageAmount += 0.5 * level + 0.5;
+                        break;
+
+                    case "minecraft:smite":
+                        if (enemy.getType() == EntityType.SKELETON || enemy.getType() == EntityType.ZOMBIE || enemy.getType() == EntityType.ZOMBIE_VILLAGER || enemy.getType() == EntityType.WITHER || enemy.getType() == EntityType.WITHER_SKELETON || enemy.getType() == EntityType.STRAY || enemy.getType() == EntityType.HUSK || enemy.getType() == EntityType.DROWNED || enemy.getType() == EntityType.ZOGLIN) {
+                            damageAmount += 2.5 * level;
+                        }
+                        break;
+                }
+            }
+        }
+
+        ((LivingEntity) enemy).damage(damageAmount);
+        enemy.setVelocity(knockbackVector);
+    }
+
+    /**
+     * Makes entity attacked by guard retaliate
+     * @param villager
+     * @param enemy
+     */
+    public void makeEnemyRetaliate(CraftVillager villager, Entity enemy) {
+        if (!enemy.isDead()) {
+            //villager
+            if (enemy.getType() == EntityType.VILLAGER && Main.nationsManager.getVillagerByUUID(enemy.getUniqueId()).getJob() == Job.GUARD)
+                ((Guard) Main.nationsManager.getVillagerByUUID(enemy.getUniqueId())).attackEnemy(villager, enemy);
+
+            //iron golem
+            else if (enemy.getType() == EntityType.IRON_GOLEM) {
+                EntityIronGolem g = ((CraftIronGolem) enemy).getHandle();
+                g.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(g, EntityHuman.class, true));
+            }
+
+            //hostile mob
+            else if (enemy.getType() != EntityType.PLAYER)
+                ((Mob) enemy).setTarget(villager);
+        }
+    }
+
+    /**
+     * Guard runs to enemy, or back to player or post
+     * @param villager
+     * @param enemy
+     */
+    public void moveToNextPosition(CraftVillager villager, Entity enemy) {
+        //run to mob
+        if (guardMode == GuardMode.STATIONARY && distance(guardLocation, enemy.getLocation()) <= ENEMY_DETECTION_RANGE) {
+            lookAtLocation(enemy.getLocation(), villager);
+            runToLocation(enemy.getLocation());
+        }
+        else if ((guardMode == GuardMode.BODYGUARD) && distance(enemy.getLocation(), followPlayer.getLocation()) <= (ENEMY_DETECTION_RANGE / 2)) {
+            lookAtLocation(enemy.getLocation(), villager);
+            runToLocation(enemy.getLocation());
+        }
+        else if (guardMode == GuardMode.WANDER && distance(villager.getLocation(), enemy.getLocation()) <= (ENEMY_DETECTION_RANGE * 0.75)) {
+            lookAtLocation(enemy.getLocation(), villager);
+            runToLocation(enemy.getLocation());
+        }
+        else returnToStart(villager);
+    }
+
+    /**
+     * Stops the guard's job of attacking hostile mobs and enemies
      */
     public void stopJob() {
         this.runnable.cancel();
@@ -353,18 +444,6 @@ public class Guard extends NationsVillager {
         villager.getEquipment().setChestplate(null);
         villager.getEquipment().setLeggings(null);
         villager.getEquipment().setBoots(null);
-    }
-
-    /**
-     * Makes the villager look at a location
-     * @param location
-     * @param villager
-     */
-    private void lookAtLocation(Location location, Entity villager) {
-        Vector lookAt = location.toVector().subtract(villager.getLocation().toVector());
-        Location loc = villager.getLocation();
-        loc.setDirection(lookAt);
-        villager.teleport(loc);
     }
 
     private void returnToStart(Entity villager) {
@@ -436,7 +515,7 @@ public class Guard extends NationsVillager {
                     JSONObject jsonEnchantment = new JSONObject();
                     String enchantmentKey = enchantment.getKey().toString();
                     jsonEnchantment.put("name", enchantmentKey.substring(enchantmentKey.indexOf(":") + 1));
-                    jsonItem.put("level", String.valueOf(item.getEnchantments().get(enchantment)));
+                    jsonEnchantment.put("level", String.valueOf(item.getEnchantments().get(enchantment)));
                     jsonEnchantments.add(jsonEnchantment);
                 }
                 jsonItem.put("enchantments", jsonEnchantments);
@@ -689,14 +768,5 @@ public class Guard extends NationsVillager {
         }
 
         return !error;
-    }
-
-    /**
-     * @param loc1
-     * @param loc2
-     * @return distance
-     */
-    private double distance(Location loc1, Location loc2) {
-        return Math.sqrt(Math.pow(loc2.getX() - loc1.getX(), 2) + Math.pow(loc2.getY() - loc1.getY(), 2) + Math.pow(loc2.getZ() - loc1.getZ(), 2));
     }
 }

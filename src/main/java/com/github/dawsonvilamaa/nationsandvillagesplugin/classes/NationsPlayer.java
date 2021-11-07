@@ -29,7 +29,7 @@ public class NationsPlayer {
         this.money = Main.nationsManager.startingMoney;
         this.nationID = -1;
         this.rank = NationsManager.Rank.NONMEMBER;
-        this.currentChunk = new NationsChunk(-1, -1, -1);
+        this.currentChunk = new NationsChunk(-1, -1, player.getWorld(), -1);
         this.autoClaim = false;
         this.autoUnclaim = false;
     }
@@ -44,7 +44,7 @@ public class NationsPlayer {
         this.nationID = Integer.parseInt(jsonPlayer.get("nationID").toString());
         this.rank = NationsManager.Rank.valueOf(jsonPlayer.get("rank").toString());
         JSONObject jsonCurrentChunk = (JSONObject) jsonPlayer.get("currentChunk");
-        this.currentChunk = new NationsChunk(Integer.parseInt(jsonCurrentChunk.get("x").toString()), Integer.parseInt(jsonCurrentChunk.get("z").toString()), Integer.parseInt(jsonCurrentChunk.get("id").toString()));
+        this.currentChunk = new NationsChunk(Integer.parseInt(jsonCurrentChunk.get("x").toString()), Integer.parseInt(jsonCurrentChunk.get("z").toString()), Bukkit.getWorld(jsonCurrentChunk.get("world").toString()), Integer.parseInt(jsonCurrentChunk.get("id").toString()));
         this.autoClaim = false;
         this.autoUnclaim = false;
     }

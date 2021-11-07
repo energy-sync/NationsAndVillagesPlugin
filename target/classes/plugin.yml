@@ -14,7 +14,7 @@ commands:
   nation:
     aliases: [nations, n]
     description: creates a nation
-    usage: /nation <autoclaim | autounclaim | claim | create | demote | enemy | exile | info | invite | join | leave | list | perms | promote | rename | unclaim> [name]
+    usage: /nation <autoclaim | autounclaim | claim | config | create | demote | enemy | exile | info | invite | join | leave | list | promote | rename | unclaim> [name]
     permission: NationsAndVillages.nation
     permission-message: You don't have permission to use that command
   sell:

@@ -10,6 +10,7 @@ public class NationsPermission {
     private boolean claimLand;
     private boolean manageMembers;
     private boolean declareEnemies;
+    private boolean accessConfig;
 
     /**
      * @param rank
@@ -24,6 +25,7 @@ public class NationsPermission {
                 claimLand = true;
                 manageMembers = true;
                 declareEnemies = true;
+                accessConfig = true;
             break;
 
             case MEMBER:
@@ -33,6 +35,7 @@ public class NationsPermission {
                 claimLand = false;
                 manageMembers = false;
                 declareEnemies = false;
+                accessConfig = false;
             break;
 
             case NONMEMBER:
@@ -42,6 +45,7 @@ public class NationsPermission {
                 claimLand = false;
                 manageMembers = false;
                 declareEnemies = false;
+                accessConfig = false;
             break;
         }
     }
@@ -56,6 +60,7 @@ public class NationsPermission {
         this.claimLand = Boolean.valueOf(jsonPermission.get("claimLand").toString());
         this.manageMembers = Boolean.valueOf(jsonPermission.get("manageMembers").toString());
         this.declareEnemies = Boolean.valueOf(jsonPermission.get("declareEnemies").toString());
+        this.accessConfig = Boolean.valueOf(jsonPermission.get("accessConfig").toString());
     }
 
     /**
@@ -142,6 +147,20 @@ public class NationsPermission {
         this.declareEnemies = declareEnemies;
     }
 
+    /**
+     * @return accessConfig
+     */
+    public boolean canAccessConfig() {
+        return this.accessConfig;
+    }
+
+    /**
+     * @param accessConfig
+     */
+    public void setAccessConfig(boolean accessConfig) {
+        this.accessConfig = accessConfig;
+    }
+
     public JSONObject toJSON() {
         JSONObject jsonPermission = new JSONObject();
         jsonPermission.put("modifyBlocks", this.modifyBlocks);
@@ -150,6 +169,7 @@ public class NationsPermission {
         jsonPermission.put("claimLand", this.claimLand);
         jsonPermission.put("manageMembers", this.manageMembers);
         jsonPermission.put("declareEnemies", this.declareEnemies);
+        jsonPermission.put("accessConfig", this.accessConfig);
         return jsonPermission;
     }
 }

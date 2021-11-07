@@ -1,8 +1,6 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
-import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.demote;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.*;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

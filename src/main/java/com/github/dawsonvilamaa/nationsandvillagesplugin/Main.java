@@ -4,10 +4,7 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.InventoryListener;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Guard;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Lumberjack;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Merchant;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.*;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.PlayerListener;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.WorldListener;
@@ -155,7 +152,7 @@ public class Main extends JavaPlugin {
                                 Main.nationsManager.addVillager(new NationsVillager(villager.getUniqueID()));
                             }
                             NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
-                            NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ());
+                            NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ(), chunk.getWorld());
                             //add villager to nation if it is in a claimed chunk
                             if (nationsChunk != null) {
                                 if (nationsVillager.getNationID() == -1) {

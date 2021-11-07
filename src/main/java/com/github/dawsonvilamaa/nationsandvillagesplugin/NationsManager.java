@@ -3,8 +3,10 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsIronGolem;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ public class NationsManager {
     private HashMap<Integer, Nation> nations;
     private HashMap<UUID, NationsVillager> villagers;
     private HashMap<UUID, NationsPlayer> players;
+    private HashMap<UUID, NationsIronGolem> golems;
     private ArrayList<NationsChunk> chunks;
     private HashMap<UUID, InventoryGUI> menus;
     private HashMap<UUID, Map.Entry<ShopItem, ScheduledThreadPoolExecutor>> playersChoosingMerchants;
@@ -38,6 +41,7 @@ public class NationsManager {
         this.nations = new HashMap<>();
         this.villagers = new HashMap<>();
         this.players = new HashMap<>();
+        this.golems = new HashMap<>();
         this.chunks = new ArrayList<>();
         this.menus = new HashMap<>();
         this.nextNationID = -1;
@@ -63,6 +67,13 @@ public class NationsManager {
      */
     public HashMap<UUID, NationsPlayer> getPlayers() {
         return this.players;
+    }
+
+    /**
+     * @return golems
+     */
+    public HashMap<UUID, NationsIronGolem> getGolems() {
+        return this.golems;
     }
 
     /**
@@ -136,6 +147,7 @@ public class NationsManager {
 
     /**
      * @param nationsVillager
+     * @return nationsVillager
      */
     public NationsVillager addVillager(NationsVillager nationsVillager) {
         this.villagers.put(nationsVillager.getUniqueID(), nationsVillager);
@@ -173,11 +185,45 @@ public class NationsManager {
     /**
      * Returns a player by a searched UUID, or returns null if it does not exist
      * @param uuid
-     * @return
+     * @return nationsPlayer
      */
     public NationsPlayer getPlayerByUUID(UUID uuid) {
         for (NationsPlayer player : this.players.values()) {
-            if (player.getUniqueID().equals(uuid)) return player;
+            if (player.getUniqueID().equals(uuid))
+                return player;
+        }
+        return null;
+    }
+
+    //Iron Golems
+
+    /**
+     * @param nationsIronGolem
+     * @return nationsIronGolem
+     */
+    public NationsIronGolem addGolem(NationsIronGolem nationsIronGolem) {
+        this.golems.put(nationsIronGolem.getUniqueID(), nationsIronGolem);
+        Bukkit.broadcastMessage("Iron Golems: " + this.golems.values().size());
+        return getGolemByUUID(nationsIronGolem.getUniqueID());
+    }
+
+    /**
+     * @param uuid
+     */
+    public void removeGolem(UUID uuid) {
+        this.golems.remove(uuid);
+        Bukkit.broadcastMessage("Iron Golems: " + this.golems.values().size());
+    }
+
+    /**
+     * Returns an iron golem by a searched UUID, or returns null if it does not exist
+     * @param uuid
+     * @return nationsIronGolem
+     */
+    public NationsIronGolem getGolemByUUID(UUID uuid) {
+        for (NationsIronGolem golem : this.golems.values()) {
+            if (golem.getUniqueID().equals(uuid))
+                return golem;
         }
         return null;
     }
@@ -190,8 +236,8 @@ public class NationsManager {
      * @param y
      * @param nationID
      */
-    public void addChunk(int x, int y, int nationID) {
-        this.chunks.add(new NationsChunk(x, y, nationID));
+    public void addChunk(int x, int y, World world, int nationID) {
+        this.chunks.add(new NationsChunk(x, y, world, nationID));
     }
 
     /**
@@ -200,9 +246,9 @@ public class NationsManager {
      * @param z
      * @return chunk
      */
-    public NationsChunk getChunkByCoords(int x, int z) {
+    public NationsChunk getChunkByCoords(int x, int z, World world) {
         for (NationsChunk chunk : this.chunks) {
-            if (chunk.getX() == x && chunk.getZ() == z) return chunk;
+            if (chunk.getX() == x && chunk.getZ() == z && chunk.getWorld().equals(world)) return chunk;
         }
         return null;
     }

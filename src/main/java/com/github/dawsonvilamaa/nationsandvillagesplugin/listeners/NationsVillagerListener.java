@@ -17,9 +17,7 @@ import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftZombie;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -28,6 +26,7 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 import java.util.Random;
 
@@ -50,8 +49,21 @@ public class NationsVillagerListener implements Listener {
         if (e.getEntity() instanceof CraftVillager) {
             NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId());
 
-            //shout for help if attacked by zombie
-            if (random.nextBoolean() && Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId()).getJob() != NationsVillager.Job.GUARD) {
+            EntityType damagerEntityType = e.getDamager().getType();
+            if (Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId()).getJob() == NationsVillager.Job.GUARD) {
+                boolean retaliate = false;
+                for (EntityType entityType : Guard.HOSTILE_MOBS) {
+                    if (damagerEntityType == entityType) {
+                        retaliate = true;
+                        break;
+                    }
+                }
+                if (!retaliate && (damagerEntityType == EntityType.PLAYER || damagerEntityType == EntityType.IRON_GOLEM)) {
+
+                }
+            }
+            else if (random.nextBoolean()) {
+                //shout for help if attacked by a player or zombie
                 if (e.getDamager() instanceof CraftPlayer)
                     nationsVillager.speakToPlayer((CraftPlayer) e.getDamager(), playerAttackMessages[random.nextInt(playerAttackMessages.length)]);
                 else if (e.getDamager() instanceof CraftZombie)
@@ -59,15 +71,16 @@ public class NationsVillagerListener implements Listener {
             }
 
             //health tag
-            nationsVillager.updateHealthTag(((CraftVillager) e.getEntity()).getHealth(), ((CraftVillager) e.getEntity()).getMaxHealth());
+            nationsVillager.updateNameTag();
         }
     }
 
+    //updates health in name tag when healed
     @EventHandler
     public void onGainHealthEvent(EntityRegainHealthEvent e) {
         if (e.getEntity() instanceof CraftVillager) {
             NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId());
-            nationsVillager.updateHealthTag(((CraftVillager) e.getEntity()).getHealth(), ((CraftVillager) e.getEntity()).getMaxHealth());
+            nationsVillager.updateNameTag();
         }
     }
 
@@ -152,7 +165,8 @@ public class NationsVillagerListener implements Listener {
         Entity entity = e.getEntity();
         if (entity instanceof CraftVillager) {
             EntityVillager villager = ((CraftVillager) entity).getHandle();
-            NationsVillager nationsVillager = Main.nationsManager.getVillagers().get(villager.getUniqueID());
+            NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
+            nationsVillager.stopRunnable();
             if (nationsVillager instanceof Merchant) {
                 for (ShopItem shopItem : ((Merchant) nationsVillager).getShop().getItems())
                     entity.getWorld().dropItemNaturally(entity.getLocation(), shopItem.getItem());
@@ -164,8 +178,16 @@ public class NationsVillagerListener implements Listener {
                         entity.getWorld().dropItemNaturally(entity.getLocation(), item);
                 }
             }
-            else if (nationsVillager instanceof Guard)
-                ((Guard) nationsVillager).stopJob();
+            else if (nationsVillager instanceof Guard) {
+                Guard guard = (Guard) nationsVillager;
+                guard.stopJob();
+
+                //skeletons and strays still attack the location of the guard after it dies, so manually set attack targets to null
+                for (Entity enemyEntity : e.getEntity().getNearbyEntities(NationsVillager.ENEMY_DETECTION_RANGE, NationsVillager.ENEMY_DETECTION_RANGE, NationsVillager.ENEMY_DETECTION_RANGE)) {
+                    if (enemyEntity.getType() == EntityType.SKELETON && ((Monster) enemyEntity).getTarget() != null && ((Monster) enemyEntity).getTarget().equals(entity))
+                        ((Monster) enemyEntity).setTarget(null);
+                }
+            }
         }
     }
 
