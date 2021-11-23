@@ -45,7 +45,7 @@ This work-in-progress Minecraft Spigot plugin adds in functionality for player-d
     * Follows the player
     * Does not attack enemies
 
-##Commands
+## Commands
 
 Format: command ( alias ) < required > [ optional ]
 * money (balance, bal) - shows the player their balance
