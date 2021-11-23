@@ -92,7 +92,7 @@ Note: These videos were made during development and may not reflect the current 
 
 [![Nations and Villages Plugin - Guards](http://img.youtube.com/vi/ToemhkZ7dOU/0.jpg)](http://www.youtube.com/watch?v=ToemhkZ7dOU "Nations and Villages Plugin - Guards")
 
-##Planned Features
+## Planned Features
 
 * Farmer villager enhancement
 * Miner villager
