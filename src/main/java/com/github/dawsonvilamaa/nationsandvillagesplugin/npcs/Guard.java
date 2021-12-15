@@ -8,6 +8,7 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.listeners.NationsVillagerListener;
 import net.minecraft.server.v1_16_R3.EntityHuman;
 import net.minecraft.server.v1_16_R3.EntityIronGolem;
+import net.minecraft.server.v1_16_R3.EntityVillager;
 import net.minecraft.server.v1_16_R3.PathfinderGoalNearestAttackableTarget;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftIronGolem;
@@ -391,13 +392,16 @@ public class Guard extends NationsVillager {
     public void makeEnemyRetaliate(CraftVillager villager, Entity enemy) {
         if (!enemy.isDead()) {
             //villager
-            if (enemy.getType() == EntityType.VILLAGER && Main.nationsManager.getVillagerByUUID(enemy.getUniqueId()).getJob() == Job.GUARD)
-                ((Guard) Main.nationsManager.getVillagerByUUID(enemy.getUniqueId())).attackEnemy(villager, enemy);
+            if (enemy.getType() == EntityType.VILLAGER) {
+                NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(enemy.getUniqueId());
+                if (nationsVillager.getJob() == NationsVillager.Job.GUARD)
+                    ((Guard) nationsVillager).attackEnemy(((CraftVillager) Bukkit.getEntity(nationsVillager.getUniqueID())), villager);
+            }
 
             //iron golem
             else if (enemy.getType() == EntityType.IRON_GOLEM) {
                 EntityIronGolem g = ((CraftIronGolem) enemy).getHandle();
-                g.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(g, EntityHuman.class, true));
+                g.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(g, EntityVillager.class, true));
             }
 
             //hostile mob

@@ -1,8 +1,7 @@
 com\github\dawsonvilamaa\nationsandvillagesplugin\NAVCommandExecutor.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\classes\ChunkCoord.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Merchant.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\nation.class
-com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillageNotFoundException.class
-com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\NationNotFoundException.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\InventoryListener.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\Main.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Shop.class
@@ -17,6 +16,7 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsChunk.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\classes\Nation.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Guard.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\NationsVillagerListener.class
+com\github\dawsonvilamaa\nationsandvillagesplugin\classes\NationsPlayer$AUTOCLAIM_MODE.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\NationsVillager$1.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Lumberjack$1$1.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Lumberjack$2.class
@@ -31,8 +31,6 @@ com\github\dawsonvilamaa\nationsandvillagesplugin\listeners\PlayerListener.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\NationsManager$Rank.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\Guard$3.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\commands\money.class
-com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\NationsPlayerNotFoundException.class
-com\github\dawsonvilamaa\nationsandvillagesplugin\exceptions\VillagerNotFoundException.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\Main$1.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\npcs\NationsIronGolem.class
 com\github\dawsonvilamaa\nationsandvillagesplugin\gui\InventoryGUI.class

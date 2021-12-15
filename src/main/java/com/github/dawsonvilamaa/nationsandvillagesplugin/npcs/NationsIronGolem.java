@@ -2,7 +2,10 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.npcs;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
-import net.minecraft.server.v1_16_R3.*;
+import net.minecraft.server.v1_16_R3.EntityHuman;
+import net.minecraft.server.v1_16_R3.EntityIronGolem;
+import net.minecraft.server.v1_16_R3.EntityVillager;
+import net.minecraft.server.v1_16_R3.PathfinderGoalNearestAttackableTarget;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftIronGolem;
@@ -10,19 +13,21 @@ import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import org.json.simple.JSONObject;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Guard.HOSTILE_MOBS;
 
 public class NationsIronGolem {
     static final int RADIUS = 16;
+    static final int ATTACK_RANGE = 2;
 
     private UUID uuid;
     private int nationID;
@@ -88,62 +93,116 @@ public class NationsIronGolem {
      * Stars the iron golem's job of attacking enemies
      */
     public void startJob() {
-        final CraftIronGolem[] golem = {(CraftIronGolem) Bukkit.getEntity(getUniqueID())};
         this.runnable = new BukkitRunnable() {
             @Override
             public void run() {
-                Entity vEntity = Bukkit.getEntity(getUniqueID());
-                if (vEntity != null && vEntity.getLocation().getChunk().isLoaded()) {
+                CraftIronGolem ironGolem = (CraftIronGolem) Bukkit.getEntity(uuid);
+                if (ironGolem != null && ironGolem.getLocation().getChunk().isLoaded()) {
                     ticks++;
-                    if (golem[0] == null)
-                        golem[0] = (CraftIronGolem) Bukkit.getEntity(getUniqueID());
-                    if (golem[0] != null) {
 
-                        //find nearby hostile enemies
-                        List<Entity> nearbyEntities = golem[0].getNearbyEntities(RADIUS, RADIUS, RADIUS);
-                        if (nearbyEntities.size() > 0) {
-                            ArrayList<Map.Entry<Entity, Double>> closestMobs = new ArrayList<>();
-                            for (Entity entity : nearbyEntities) {
-                                //enemy players and villagers
-                                if (entity.getType() == EntityType.PLAYER || entity.getType() == EntityType.VILLAGER) {
-                                    Nation golemNation = Main.nationsManager.getNationByID(getNationID());
-                                    if (golemNation != null) {
-                                        Nation otherNation = null;
-                                        if (entity.getType() == EntityType.PLAYER)
-                                            otherNation = Main.nationsManager.getNationByID(Main.nationsManager.getPlayerByUUID(entity.getUniqueId()).getNationID());
-                                        else if (entity.getType() == EntityType.VILLAGER) {
-                                            NationsVillager enemyVillager = Main.nationsManager.getVillagerByUUID(entity.getUniqueId());
-                                            if (enemyVillager != null)
-                                                otherNation = Main.nationsManager.getNationByID(enemyVillager.getNationID());
-                                        }
-                                        if (otherNation != null && golemNation.isEnemy(otherNation.getID())) {
-                                            Location golemLoc = golem[0].getLocation();
-                                            Location mobLoc = entity.getLocation();
-                                            double distance = distance(golemLoc, mobLoc);
-                                            closestMobs.add(new AbstractMap.SimpleEntry<>(entity, distance));
-                                        }
-                                    }
-                                }
-                            }
-                            if (closestMobs.size() > 0) {
-                                closestMobs.sort(Comparator.comparing(Map.Entry::getValue));
-                                Entity mob = closestMobs.get(0).getKey();
-                                //attack mob
-                                if (ticks % 4 == 0) {
-                                    EntityIronGolem g = golem[0].getHandle();
-                                    if (mob instanceof CraftPlayer)
-                                        g.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(g, EntityHuman.class, true));
-                                    else if (mob instanceof CraftVillager)
-                                        g.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(g, EntityVillager.class, true));
-                                }
-                            }
+                    //find nearby hostile enemies
+                    List<Entity> nearbyEntities = ironGolem.getNearbyEntities(RADIUS, 2, RADIUS);
+                    if (nearbyEntities.size() > 0) {
+                        Map.Entry<Entity, Double> closestEntity = getClosestEnemy(ironGolem, getNationID());
+                        if (closestEntity != null) {
+                            //attack enemy
+                            Entity enemy = closestEntity.getKey();
+                            attackEnemy(ironGolem, enemy);
                         }
-                        if (ticks >= 8)
-                            ticks = 0;
                     }
+
+                    if (ticks >= 8)
+                        ticks = 0;
                 }
             }
         }.runTaskTimer(Main.plugin, 20, 5);
+    }
+
+    /**
+     * Gets all enemies (hostile mobs, enemy players, villagers, and iron golems) within a certain radius of the iron golem and returns the closest one
+     * @param ironGolem
+     * @param nationID
+     * @return
+     */
+    public Map.Entry<Entity, Double> getClosestEnemy(CraftIronGolem ironGolem, int nationID) {
+        List<Entity> nearbyEntities = ironGolem.getNearbyEntities(RADIUS, 2, RADIUS);
+
+        if (nearbyEntities.size() == 0)
+            return null;
+
+        Map.Entry<Entity, Double> closestEntity = null;
+        Nation ironGolemNation = Main.nationsManager.getNationByID(nationID);
+        for (Entity entity : nearbyEntities) {
+            if (!entity.isDead()) {
+                boolean isEnemy = false;
+
+                //villager
+                if (entity.getType() == EntityType.VILLAGER && ironGolemNation.isEnemy(Main.nationsManager.getVillagerByUUID(entity.getUniqueId()).getNationID()))
+                    isEnemy = true;
+
+                    //iron golem
+                else if (entity.getType() == EntityType.IRON_GOLEM && ironGolemNation.isEnemy(Main.nationsManager.getGolemByUUID(entity.getUniqueId()).getNationID()))
+                    isEnemy = true;
+
+                    //player
+                else if (entity.getType() == EntityType.PLAYER && ironGolemNation.isEnemy(Main.nationsManager.getPlayerByUUID(entity.getUniqueId()).getNationID()))
+                    isEnemy = true;
+
+                    //hostile mobs
+                else {
+                    for (EntityType entityType : HOSTILE_MOBS) {
+                        if (entity.getType() == entityType)
+                            isEnemy = true;
+                    }
+                }
+
+                //set closest entity
+                if (isEnemy) {
+                    double dist = distance(ironGolem.getLocation(), entity.getLocation());
+                    if (closestEntity == null || dist < closestEntity.getValue())
+                        closestEntity = new AbstractMap.SimpleEntry<>(entity, dist);
+                }
+            }
+        }
+        return closestEntity;
+    }
+
+    /**
+     * Makes the iron golem attack an entity if it is a player, villager, or iron golem
+     * @param ironGolem
+     * @param enemy
+     */
+    public void attackEnemy(CraftIronGolem ironGolem, Entity enemy) {
+        EntityIronGolem ironGolemHandle = ironGolem.getHandle();
+
+        if (enemy instanceof CraftPlayer)
+            ironGolemHandle.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(ironGolemHandle, EntityHuman.class, true));
+        else if (enemy instanceof CraftVillager)
+            ironGolemHandle.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(ironGolemHandle, EntityVillager.class, true));
+        else if (enemy instanceof CraftIronGolem)
+            ironGolemHandle.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(ironGolemHandle, EntityIronGolem.class, true));
+    }
+
+    /**
+     * Makes entity attacked by the iron golem attack the iron golem if it is a villager or iron golem
+     * @param ironGolem
+     * @param enemy
+     */
+    public void makeEnemyRetaliate(CraftIronGolem ironGolem, Entity enemy) {
+        if (!enemy.isDead()) {
+            //villager
+            if (enemy.getType() == EntityType.VILLAGER) {
+                NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(enemy.getUniqueId());
+                if (nationsVillager.getJob() == NationsVillager.Job.GUARD)
+                    ((Guard) nationsVillager).attackEnemy(((CraftVillager) Bukkit.getEntity(nationsVillager.getUniqueID())), ironGolem);
+            }
+
+            //iron golem
+            else if (enemy.getType() == EntityType.IRON_GOLEM) {
+                EntityIronGolem ironGolemHandle = ((CraftIronGolem) enemy).getHandle();
+                ironGolemHandle.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget<>(ironGolemHandle, EntityHuman.class, true));
+            }
+        }
     }
 
     /**

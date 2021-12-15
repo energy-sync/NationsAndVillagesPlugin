@@ -4,22 +4,16 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Consumer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class InventoryGUI implements Listener, InventoryHolder {
     private Player player;
-    private String name;
+    private String title;
     private Inventory inventory;
     private HashMap<Integer, InventoryGUIButton> buttons;
     private int slot;
@@ -31,15 +25,15 @@ public class InventoryGUI implements Listener, InventoryHolder {
     /**
      * Creates an inventory GUI with a given name and number of rows. Rows must be a value from 1-6
      * @param player
-     * @param name
+     * @param title
      * @param rows
      */
-    public InventoryGUI(Player player, String name, int rows, boolean locked) {
+    public InventoryGUI(Player player, String title, int rows, boolean locked) {
         this.player = player;
-        this.name = name;
+        this.title = title;
         if (rows < 1) rows = 1;
         if (rows > 6) rows = 6;
-        this.inventory = Bukkit.createInventory(null, 9 * rows, name);
+        this.inventory = Bukkit.createInventory(null, 9 * rows, title);
         this.buttons = new HashMap<>();
         this.slot = 0;
         this.maxItems = (9 * rows) - 1;
@@ -60,7 +54,7 @@ public class InventoryGUI implements Listener, InventoryHolder {
      * @return name
      */
     public String getName() {
-        return this.name;
+        return this.title;
     }
 
     @Override

@@ -123,7 +123,7 @@ public class ShopItem {
      * @return equal
      */
     public boolean equals(ShopItem compare) {
-        if (this.item.equals(compare.getItem()) && this.price == compare.getPrice())
+        if (this.item.equals(compare.getItem()) && this.price == compare.getPrice() && this.amount == compare.getAmount())
             return true;
         return false;
     }

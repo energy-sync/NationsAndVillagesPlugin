@@ -2,11 +2,14 @@ package com.github.dawsonvilamaa.nationsandvillagesplugin.commands;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.Main;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.NationsManager;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPermission;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUIButton;
-import net.minecraft.server.v1_16_R3.EntityIronGolem;
-import net.minecraft.server.v1_16_R3.EntityVillager;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsIronGolem;
+import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -16,6 +19,7 @@ import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static com.github.dawsonvilamaa.nationsandvillagesplugin.Main.nationsManager;
@@ -41,43 +45,49 @@ public class nation implements Command {
         switch (args[0]) {
             case "autoclaim":
             case "ac":
+                //check if player is in a nation
                 if (nationsPlayer.getNationID() == -1) {
                     player.sendMessage(ChatColor.RED + "You must own a nation to claim chunks");
                     return true;
                 }
-                if (!nationsPlayer.isAutoClaiming()) {
-                    nationsPlayer.setAutoUnclaim(false);
-                    nationsPlayer.setAutoClaim(true);
+                //check if player is autoclaiming
+                if (nationsPlayer.getAutoClaimMode() != NationsPlayer.AUTOCLAIM_MODE.AUTOCLAIM) {
+                    //turn on autoclaim
+                    nationsPlayer.setAutoClaimMode(NationsPlayer.AUTOCLAIM_MODE.AUTOCLAIM);
                     player.sendMessage(ChatColor.YELLOW + "Auto-claiming for " + playerNation.getName() + " has been " + ChatColor.GREEN + "ENABLED");
                     NationsChunk currentChunk = nationsPlayer.getCurrentChunk();
+                    //claim chunk
                     if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld()) == null)
                         nation.run(player, new String[] {"claim"});
-                        //claim.run(player, new String[0]);
                 }
                 else {
-                    nationsPlayer.setAutoClaim(false);
+                    //turn off autoclaim
+                    nationsPlayer.setAutoClaimMode(NationsPlayer.AUTOCLAIM_MODE.NONE);
                     player.sendMessage(ChatColor.YELLOW + "Auto-claiming for " + playerNation.getName() + " has been " + ChatColor.RED + "DISABLED");
                 }
                 return true;
                 
             case "autounclaim":
             case "auc":
+                //check if player is in a nation
                 if (nationsPlayer.getNationID() == -1) {
                     player.sendMessage(ChatColor.RED + "You must own a nation to claim and unclaim chunks");
                     return true;
                 }
-                if (!nationsPlayer.isAutoUnclaiming()) {
-                    nationsPlayer.setAutoClaim(false);
-                    nationsPlayer.setAutoUnclaim(true);
+                //check if player is autounclaiming
+                if (nationsPlayer.getAutoClaimMode() != NationsPlayer.AUTOCLAIM_MODE.AUTOUNCLAIM) {
+                    //turn on autounclaim
+                    nationsPlayer.setAutoClaimMode(NationsPlayer.AUTOCLAIM_MODE.AUTOUNCLAIM);
                     player.sendMessage(ChatColor.YELLOW + "Auto-unclaiming for " + playerNation.getName() + " has been " + ChatColor.GREEN + "ENABLED");
                     NationsChunk currentChunk = nationsPlayer.getCurrentChunk();
-                    if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld()) != null) {
-                        if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld()).getNationID() == nationsPlayer.getNationID())
-                            nation.run(player, new String[] {"unclaim"});
-                    }
+                    NationsChunk claimedChunk = Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld());
+                    //unclaim chunk
+                    if (claimedChunk != null && claimedChunk.getNationID() == nationsPlayer.getNationID())
+                        nation.run(player, new String[] {"unclaim"});
                 }
                 else {
-                    nationsPlayer.setAutoUnclaim(false);
+                    //turn off autounclaim
+                    nationsPlayer.setAutoClaimMode(NationsPlayer.AUTOCLAIM_MODE.NONE);
                     player.sendMessage(ChatColor.YELLOW + "Auto-unclaiming for " + playerNation.getName() + " has been " + ChatColor.RED + "DISABLED");
                 }
                 return true;
@@ -85,55 +95,52 @@ public class nation implements Command {
             case "claim":
             case "c":
                 //check if nationsPlayer owns a nation
-                if (nationsPlayer.getNationID() == -1)
+                if (nationsPlayer.getNationID() == -1) {
                     player.sendMessage(ChatColor.RED + "You must be in a nation to claim land");
-                else {
-                    //check if nationsPlayer has permission to claim land
-                    if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canClaimLand()) {
-                        player.sendMessage(ChatColor.RED + "You do not have permission to claim land for your nation");
-                        return true;
-                    }
+                    return true;
+                }
 
-                    Chunk currentChunk = player.getLocation().getChunk();
-                    //check if chunk is already claimed
-                    for (NationsChunk chunk : Main.nationsManager.getChunks()) {
-                        if (chunk.getX() == currentChunk.getX() && chunk.getZ() == currentChunk.getZ() && chunk.getWorldName().equals(currentChunk.getWorld().getName())) {
-                            player.sendMessage(ChatColor.RED + "This chunk is already claimed");
-                            return true;
+                //check if nationsPlayer has permission to claim land
+                if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canClaimLand()) {
+                    player.sendMessage(ChatColor.RED + "You do not have permission to claim land for your nation");
+                    return true;
+                }
+
+                Chunk currentChunk = player.getLocation().getChunk();
+                //check if chunk is already claimed
+                if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld()) != null) {
+                    player.sendMessage(ChatColor.RED + "This chunk is already claimed");
+                    return true;
+                }
+
+                //check if nationsPlayer has enough money to buy a new chunk
+                int chunkCost = (playerNation.getNumChunks() * NationsManager.chunkCost) + NationsManager.chunkCost;
+                if (nationsPlayer.getMoney() < chunkCost) {
+                    player.sendMessage(ChatColor.RED + "You do not have enough money to purchase a new chunk. It costs $" + chunkCost);
+                    return true;
+                }
+
+                //claim chunk
+                Main.nationsManager.addChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), nationsPlayer.getNationID());
+                nationsPlayer.removeMoney(chunkCost);
+                playerNation.incrementChunks();
+                player.sendMessage(ChatColor.GREEN + "Claimed this chunk for " + playerNation.getName() + " for $" + chunkCost);
+                nationsPlayer.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), nationsPlayer.getNationID())); //update currentChunk
+
+                //update all villagers and iron golems in the chunk
+                for (Entity entity : currentChunk.getEntities()) {
+                    if (entity instanceof CraftVillager) {
+                        NationsVillager nationsVillager = nationsManager.getVillagerByUUID(entity.getUniqueId());
+                        if (nationsVillager != null || nationsVillager.getNationID() != nationsPlayer.getNationID()) {
+                            nationsVillager.setNationID(nationsPlayer.getNationID());
+                            playerNation.incrementPopulation();
                         }
                     }
-
-                    //check if nationsPlayer has enough money to buy a new chunk
-                    int chunkCost = (playerNation.getNumChunks() * NationsManager.chunkCost) + NationsManager.chunkCost;
-                    if (nationsPlayer.getMoney() - chunkCost < 0) {
-                        player.sendMessage(ChatColor.RED + "You do not have enough money to purchase a new chunk. It costs $" + chunkCost);
-                        return true;
+                    else if (entity instanceof CraftIronGolem) {
+                        NationsIronGolem nationsIronGolem = nationsManager.getGolemByUUID(entity.getUniqueId());
+                        if (nationsIronGolem != null || nationsIronGolem.getNationID() != nationsPlayer.getNationID())
+                            nationsIronGolem.setNationID(nationsPlayer.getNationID());
                     }
-                    else {
-                        //claim chunk
-                        Main.nationsManager.addChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), nationsPlayer.getNationID());
-                        nationsPlayer.removeMoney(chunkCost);
-                        playerNation.incrementChunks();
-                        player.sendMessage(ChatColor.GREEN + "Claimed this chunk for " + playerNation.getName() + " for $" + chunkCost);
-                        nationsPlayer.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), nationsPlayer.getNationID())); //update currentChunk
-
-                        //update all villagers and iron golems in the chunk
-                        for (Entity entity : currentChunk.getEntities()) {
-                            if (entity instanceof CraftVillager) {
-                                EntityVillager villager = ((CraftVillager) entity).getHandle();
-                                if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).getNationID() != nationsPlayer.getNationID()) {
-                                    Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).setNationID(nationsPlayer.getNationID());
-                                    playerNation.incrementPopulation();
-                                }
-                            }
-                            else if (entity instanceof CraftIronGolem) {
-                                EntityIronGolem golem = ((CraftIronGolem) entity).getHandle();
-                                if (Main.nationsManager.getGolemByUUID(golem.getUniqueID()).getNationID() != nationsPlayer.getNationID())
-                                    Main.nationsManager.getGolemByUUID(golem.getUniqueID()).setNationID(nationsPlayer.getNationID());
-                            }
-                        }
-                    }
-
                 }
                 return true;
 
@@ -144,37 +151,44 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
+
                 //check if player has permission to access config for their nation
                 if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canAccessConfig()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to change settings for your nation");
                     return true;
                 }
+
                 //show menu
                 configMenu(player);
                 return true;
 
             case "create":
                 if (args.length < 2) return false;
+
                 //check if player is in a nation
                 if (nationsPlayer.getNationID() != -1) {
                     player.sendMessage(ChatColor.RED + "You are already in a nation");
                     return true;
                 }
+
                 //check if name is 2-30 characters long
                 if (fullName.length() < 2 || fullName.length() > 30)
                     player.sendMessage(ChatColor.RED + "Nation name must be between 2 and 30 characters");
+
                 //check if name is already taken
-                else if (nationsManager.getNationByName(fullName.toString()) != null)
+                else if (nationsManager.getNationByName(fullName.toString()) != null) {
                     player.sendMessage(ChatColor.RED + "A nation with that name already exists");
-                else {
-                    Nation newNation = new Nation(fullName.toString(), player, nationsManager.nextNationID());
-                    nationsManager.addNation(newNation);
-                    nationsPlayer.setNationID(newNation.getID());
-                    newNation.incrementPopulation();
-                    nationsPlayer.setRank(NationsManager.Rank.LEADER);
-                    newNation.addMember(player.getUniqueId());
-                    player.sendMessage(ChatColor.GREEN + "You have created the nation \"" + newNation.getName() + "\"");
+                    return true;
                 }
+
+                //create nation
+                Nation newNation = new Nation(fullName.toString(), player, nationsManager.nextNationID());
+                nationsManager.addNation(newNation);
+                nationsPlayer.setNationID(newNation.getID());
+                newNation.incrementPopulation();
+                nationsPlayer.setRank(NationsManager.Rank.LEADER);
+                newNation.addMember(player.getUniqueId());
+                player.sendMessage(ChatColor.GREEN + "You have created the nation \"" + newNation.getName() + "\"");
                 return true;
                 
             case "demote":
@@ -186,41 +200,48 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
+
                 //check if NationsPlayer has permission to demote members
                 if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
                     return true;
                 }
+
                 //check if NationsPlayer being demoted is online
-                Player promotedNationsPlayer = Bukkit.getPlayer(args[1]);
-                if (promotedNationsPlayer == null) {
+                Player demotedPlayer = Bukkit.getPlayer(args[1]);
+                if (demotedPlayer == null) {
                     player.sendMessage(ChatColor.RED + "That player cannot be found. Make sure the spelling is correct and that the player is online");
                     return true;
                 }
+
                 //check if NationsPlayer being demoted is a member of the same nation
-                NationsPlayer nationsDemotedNationsPlayer = Main.nationsManager.getPlayerByUUID(promotedNationsPlayer.getUniqueId());
-                if (nationsPlayer.getNationID() != nationsDemotedNationsPlayer.getNationID()) {
+                NationsPlayer demotedNationsPlayer = Main.nationsManager.getPlayerByUUID(demotedPlayer.getUniqueId());
+                if (nationsPlayer.getNationID() != demotedNationsPlayer.getNationID()) {
                     player.sendMessage(ChatColor.RED + "That player is not a member of your nation");
                     return true;
                 }
+
                 //check if NationsPlayer being demoted is a leader
-                if (nationsDemotedNationsPlayer.getRank() == NationsManager.Rank.LEADER) {
-                    player.sendMessage(ChatColor.RED + "You cannot demote yourself since you are the leader of your nation");
+                if (demotedNationsPlayer.getRank() == NationsManager.Rank.LEADER) {
+                    player.sendMessage(ChatColor.RED + "You cannot demote the leader of a nation");
                     return true;
                 }
+
                 //check if NationsPlayer being demoted is already a member (lowest rank)
-                if (nationsDemotedNationsPlayer.getRank() == NationsManager.Rank.MEMBER) {
+                if (demotedNationsPlayer.getRank() == NationsManager.Rank.MEMBER) {
                     player.sendMessage(ChatColor.RED + "That player is already at the lowest possible rank");
                     return true;
                 }
+
                 //demote NationsPlayer
-                nationsDemotedNationsPlayer.setRank(NationsManager.Rank.MEMBER);
-                Bukkit.getPlayer(nationsDemotedNationsPlayer.getUniqueID()).sendMessage(ChatColor.RED + "You have been demoted from legate to member rank in " + playerNation.getName());
+                demotedNationsPlayer.setRank(NationsManager.Rank.MEMBER);
+                Bukkit.getPlayer(demotedNationsPlayer.getUniqueID()).sendMessage(ChatColor.RED + "You have been demoted from legate to member rank in " + playerNation.getName());
+
                 //send message to all members
-                for (UUID uuid : playerNation.getMembers()) {
+                for (UUID uuid : playerNation.getMemberUUIDs()) {
                     Player msgNationsPlayer = Bukkit.getPlayer(uuid);
-                    if (msgNationsPlayer != null && !(msgNationsPlayer.getUniqueId().equals(nationsDemotedNationsPlayer.getUniqueID())))
-                        msgNationsPlayer.sendMessage(ChatColor.YELLOW + nationsDemotedNationsPlayer.getName() + " has been demoted to member");
+                    if (msgNationsPlayer != null && !(msgNationsPlayer.getUniqueId().equals(demotedNationsPlayer.getUniqueID())))
+                        msgNationsPlayer.sendMessage(ChatColor.YELLOW + demotedNationsPlayer.getName() + " has been demoted to member");
                 }
                 return true;
 
@@ -233,51 +254,51 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
-                //check if player has permission to manage nation
+
+                //check if player has permission to declare an enemy
                 if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canDeclareEnemies()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to declare enemies");
                     return true;
                 }
+
                 //check if enemy nation exists
                 if (argNation == null) {
                     player.sendMessage(ChatColor.RED + "No nation of that name exists");
                     return true;
                 }
+
                 //check if player is trying to declare own nation as an enemy
                 if (playerNation.getID() == argNation.getID()) {
                     player.sendMessage(ChatColor.RED + "You cannot declare your own nation as an enemy");
                     return true;
                 }
+
                 //declare or undeclare enemy
                 fullName = new StringBuilder(fullName.substring(0, 1).toUpperCase() + fullName.substring(1));
                 if (!playerNation.isEnemy(argNation.getID())) {
                     playerNation.addEnemy(argNation.getID());
 
                     //send message to all members of both nations
-                    for (UUID enemyUUID : argNation.getMembers()) {
-                        Player enemyPlayer = Bukkit.getPlayer(enemyUUID);
-                        if (enemyPlayer != null)
-                            enemyPlayer.sendMessage(ChatColor.RED + fullName.toString() + " has been declared as an enemy by " + playerNation.getName());
-                    }
-                    for (UUID memberUUID : playerNation.getMembers()) {
-                        Player enemyPlayer = Bukkit.getPlayer(memberUUID);
-                        if (enemyPlayer != null)
-                            enemyPlayer.sendMessage(ChatColor.RED + fullName.toString() + " has been declared as an enemy by " + playerNation.getName());
+                    ArrayList<UUID> playerUUIDs = new ArrayList<>();
+                    playerUUIDs.addAll(playerNation.getMemberUUIDs());
+                    playerUUIDs.addAll(argNation.getMemberUUIDs());
+                    for (UUID playerUUID : playerUUIDs) {
+                        Player onlinePlayer = Bukkit.getPlayer(playerUUID);
+                        if (onlinePlayer != null)
+                            onlinePlayer.sendMessage(ChatColor.RED + fullName.toString() + " has been declared as an enemy by " + playerNation.getName());
                     }
                 }
                 else {
                     playerNation.removeEnemy(argNation.getID());
 
                     //send message to all members of both nations
-                    for (UUID enemyUUID : argNation.getMembers()) {
-                        Player enemyPlayer = Bukkit.getPlayer(enemyUUID);
-                        if (enemyPlayer != null)
-                            enemyPlayer.sendMessage(ChatColor.GREEN + fullName.toString() + " is no longer an enemy of " + playerNation.getName());
-                    }
-                    for (UUID memberUUID : playerNation.getMembers()) {
-                        Player enemyPlayer = Bukkit.getPlayer(memberUUID);
-                        if (enemyPlayer != null)
-                            enemyPlayer.sendMessage(ChatColor.GREEN + fullName.toString() + " is no longer an enemy of " + playerNation.getName());
+                    ArrayList<UUID> playerUUIDs = new ArrayList<>();
+                    playerUUIDs.addAll(playerNation.getMemberUUIDs());
+                    playerUUIDs.addAll(argNation.getMemberUUIDs());
+                    for (UUID playerUUID : playerUUIDs) {
+                        Player onlinePlayer = Bukkit.getPlayer(playerUUID);
+                        if (onlinePlayer != null)
+                            onlinePlayer.sendMessage(ChatColor.GREEN + fullName.toString() + " is no longer an enemy of " + playerNation.getName());
                     }
                 }
                 return true;
@@ -291,40 +312,46 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
+
                 //check if nationsPlayer has permission to exile members
                 if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
                     return true;
                 }
+
                 //check if nationsPlayer being exiled is online
                 Player exiledPlayer = Bukkit.getPlayer(args[1]);
                 if (exiledPlayer == null) {
                     player.sendMessage(ChatColor.RED + "That player cannot be found. Make sure the spelling is correct and that the player is online");
                     return true;
                 }
+
                 //check if nationsPlayer is trying to exile themselves
                 NationsPlayer nationsExiledPlayer = Main.nationsManager.getPlayerByUUID(exiledPlayer.getUniqueId());
                 if (nationsPlayer.getUniqueID().equals(nationsExiledPlayer.getUniqueID())) {
                     player.sendMessage(ChatColor.RED + "You cannot exile yourself from this nation. Use \"/nation leave\" instead.");
                     return true;
                 }
+
                 //check if nationsPlayer being exiled is a member of the same nation
                 if (nationsPlayer.getNationID() != nationsExiledPlayer.getNationID()) {
                     player.sendMessage(ChatColor.RED + "That player is not a member of your nation");
                     return true;
                 }
+
                 //check if nationsPlayer being exiled is the leader of the nation
                 if (nationsExiledPlayer.getRank() == NationsManager.Rank.LEADER) {
                     player.sendMessage(ChatColor.RED + "You cannot exile the leader of your nation");
                     return true;
                 }
+
                 //exile nationsPlayer
                 nationsExiledPlayer.setNationID(-1);
                 nationsExiledPlayer.setRank(NationsManager.Rank.NONMEMBER);
                 playerNation.decrementPopulation();
                 Bukkit.getPlayer(nationsExiledPlayer.getUniqueID()).sendMessage(ChatColor.RED + "You have been exiled from " + playerNation.getName() + "!");
                 //send message to all members
-                for (UUID uuid : playerNation.getMembers()) {
+                for (UUID uuid : playerNation.getMemberUUIDs()) {
                     Player msgPlayer = Bukkit.getPlayer(uuid);
                     if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(nationsExiledPlayer.getUniqueID())))
                         msgPlayer.sendMessage(ChatColor.RED + nationsExiledPlayer.getName() + " has been exiled from " + playerNation.getName());
@@ -337,39 +364,35 @@ public class nation implements Command {
                         return false;
                     else argNation = playerNation;
                 }
-                if (args.length == 1 && argNation == null)
-                    player.sendMessage(ChatColor.RED + "No nation of that name exists");
-                else {
-                    StringBuilder legateStr = new StringBuilder();
-                    StringBuilder memberStr = new StringBuilder();
-                    StringBuilder enemiesStr = new StringBuilder();
-                    for (UUID uuid : argNation.getMembers()) {
-                        NationsPlayer member = nationsManager.getPlayerByUUID(uuid);
-                        if (member.getRank() == NationsManager.Rank.LEGATE)
-                            legateStr.append(", ").append(member.getName());
-                        else if (member.getRank() == NationsManager.Rank.MEMBER)
-                            memberStr.append(", ").append(member.getName());
-                    }
-                    if (legateStr.length() > 0)
-                        legateStr = new StringBuilder(legateStr.substring(2));
-                    if (memberStr.length() > 0)
-                        memberStr = new StringBuilder(memberStr.substring(2));
-                    for (int enemyID : argNation.getEnemies()) {
-                        Nation enemy = nationsManager.getNationByID(enemyID);
-                        enemiesStr.append(", ").append(enemy.getName());
-                    }
-                    if (enemiesStr.length() > 0)
-                        enemiesStr = new StringBuilder(enemiesStr.substring(2));
-
-                    player.sendMessage(ChatColor.GOLD + "--------------------\n"
-                            + ChatColor.WHITE + argNation.getName()
-                            + ChatColor.GOLD + "\n--------------------\n"
-                            + ChatColor.YELLOW + "Leader: " + ChatColor.WHITE + argNation.getOwner().getName()
-                            + ChatColor.YELLOW + "\nPopulation: " + ChatColor.WHITE + argNation.getPopulation()
-                            + ChatColor.YELLOW + "\nLegates: " + ChatColor.WHITE + legateStr
-                            + ChatColor.YELLOW + "\nMembers: " + ChatColor.WHITE + memberStr
-                            + ChatColor.YELLOW + "\nEnemies: " + ChatColor.WHITE + enemiesStr);
+                StringBuilder legateStr = new StringBuilder();
+                StringBuilder memberStr = new StringBuilder();
+                StringBuilder enemiesStr = new StringBuilder();
+                for (UUID uuid : argNation.getMemberUUIDs()) {
+                    NationsPlayer member = nationsManager.getPlayerByUUID(uuid);
+                    if (member.getRank() == NationsManager.Rank.LEGATE)
+                        legateStr.append(", ").append(member.getName());
+                    else if (member.getRank() == NationsManager.Rank.MEMBER)
+                        memberStr.append(", ").append(member.getName());
                 }
+                if (legateStr.length() > 0)
+                    legateStr = new StringBuilder(legateStr.substring(2));
+                if (memberStr.length() > 0)
+                    memberStr = new StringBuilder(memberStr.substring(2));
+                for (int enemyID : argNation.getEnemies()) {
+                    Nation enemy = nationsManager.getNationByID(enemyID);
+                    enemiesStr.append(", ").append(enemy.getName());
+                }
+                if (enemiesStr.length() > 0)
+                    enemiesStr = new StringBuilder(enemiesStr.substring(2));
+
+                player.sendMessage(ChatColor.GOLD + "--------------------\n"
+                        + ChatColor.WHITE + argNation.getName()
+                        + ChatColor.GOLD + "\n--------------------\n"
+                        + ChatColor.YELLOW + "Leader: " + ChatColor.WHITE + Bukkit.getOfflinePlayer(argNation.getOwnerUUID()).getName()
+                        + ChatColor.YELLOW + "\nPopulation: " + ChatColor.WHITE + argNation.getPopulation()
+                        + ChatColor.YELLOW + "\nLegates: " + ChatColor.WHITE + legateStr
+                        + ChatColor.YELLOW + "\nMembers: " + ChatColor.WHITE + memberStr
+                        + ChatColor.YELLOW + "\nEnemies: " + ChatColor.WHITE + enemiesStr);
                 return true;
                 
             case "invite":
@@ -381,28 +404,33 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
+
                 //check if nationsPlayer has permission to invite members
                 if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to invite members to your nation");
                     return true;
                 }
+
                 //check if nationsPlayer being invited is online
                 Player invitedPlayer = Bukkit.getPlayer(args[1]);
                 if (invitedPlayer == null) {
                     player.sendMessage(ChatColor.RED + "That player cannot be found. Make sure the spelling is correct and that the player is online");
                     return true;
                 }
+
                 //check if nationsPlayer being invited is a member of the same nation
                 NationsPlayer nationsInvitedPlayer = Main.nationsManager.getPlayerByUUID(invitedPlayer.getUniqueId());
                 if (nationsPlayer.getNationID() == nationsInvitedPlayer.getNationID()) {
                     player.sendMessage(ChatColor.RED + "That player is already a member of your nation");
                     return true;
                 }
+
                 //check if nationsPlayer being invited is already in a nation
                 if (nationsInvitedPlayer.getNationID() != -1) {
                     player.sendMessage(ChatColor.YELLOW + "That player is already in a nation");
                     return true;
                 }
+
                 //check if nationsPlayer already has a pending invite
                 for (UUID uuid : playerNation.getInvitedPlayers()) {
                     if (uuid.equals(nationsInvitedPlayer.getUniqueID())) {
@@ -410,6 +438,7 @@ public class nation implements Command {
                         return true;
                     }
                 }
+
                 //invite nationsPlayer
                 playerNation.addInvitedPlayer(invitedPlayer.getUniqueId());
                 player.sendMessage(ChatColor.GREEN + args[1] + " has been invited to " + playerNation.getName());
@@ -417,22 +446,26 @@ public class nation implements Command {
 
             case "join":
                 if (args.length < 2) return false;
+
                 //check if player is already in a nation
                 if (nationsPlayer.getNationID() != -1) {
                     player.sendMessage(ChatColor.RED + "You are already in a nation");
                     return true;
                 }
+
                 //check if the nation exists
                 if (argNation == null) {
                     player.sendMessage(ChatColor.RED + "No nation of that name exists");
                     return true;
                 }
-                //check if player has an invite to the nation
+
+                //check if player has been invited to the nation
                 Nation inviteNation = nationsManager.getNationByName(fullName.toString());
                 if (!inviteNation.isPlayerInvited(player.getUniqueId())) {
                     player.sendMessage(ChatColor.RED + "You have not been invited to join this nation");
                     return true;
                 }
+
                 //add player to the nation
                 nationsPlayer.setNationID(argNation.getID());
                 nationsPlayer.setRank(NationsManager.Rank.MEMBER);
@@ -440,7 +473,7 @@ public class nation implements Command {
                 argNation.addMember(player.getUniqueId());
                 player.sendMessage(ChatColor.GREEN + "You have joined the nation \"" + argNation.getName() + "\"");
                 //send message to all members
-                for (UUID uuid : argNation.getMembers()) {
+                for (UUID uuid : argNation.getMemberUUIDs()) {
                     Player msgPlayer = Bukkit.getPlayer(uuid);
                     if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(player.getUniqueId())))
                         msgPlayer.sendMessage(ChatColor.GREEN + nationsPlayer.getName() + " has joined " + argNation.getName());
@@ -453,6 +486,7 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
+
                 //confirmation
                 if (args.length < 2) {
                     if (nationsPlayer.getRank() == NationsManager.Rank.LEADER)
@@ -460,6 +494,7 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "Confirm that you want to leave this nation with: /nation leave [name]");
                     return true;
                 }
+
                 //leave nation
                 if (fullName.toString().equals(nationsManager.getNationByID(nationsPlayer.getNationID()).getName())) {
                     nationsPlayer.setNationID(-1);
@@ -470,7 +505,7 @@ public class nation implements Command {
                     playerNation.removeMember(player.getUniqueId());
                     player.sendMessage(ChatColor.YELLOW + "You have left the nation \"" + playerNation.getName() + "\"");
                     //send message to all members
-                    for (UUID uuid : playerNation.getMembers()) {
+                    for (UUID uuid : playerNation.getMemberUUIDs()) {
                         Player msgPlayer = Bukkit.getPlayer(uuid);
                         if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(player.getUniqueId())))
                             msgPlayer.sendMessage(ChatColor.YELLOW + nationsPlayer.getName() + " has left " + playerNation.getName());
@@ -499,33 +534,39 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
+
                 //check if nationsPlayer has permission to promote members
                 if (!playerNation.getConfig().getPermissionByRank(nationsPlayer.getRank()).canManageMembers()) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to manage members of your nation");
                     return true;
                 }
+
                 //check if nationsPlayer being promoted is online
                 Player promotedPlayer = Bukkit.getPlayer(args[1]);
                 if (promotedPlayer == null) {
                     player.sendMessage(ChatColor.RED + "That player cannot be found. Make sure the spelling is correct and that the player is online");
                     return true;
                 }
+
                 //check if nationsPlayer being promoted is a member of the same nation
                 NationsPlayer nationsPromotedPlayer = Main.nationsManager.getPlayerByUUID(promotedPlayer.getUniqueId());
                 if (nationsPlayer.getNationID() != nationsPromotedPlayer.getNationID()) {
                     player.sendMessage(ChatColor.RED + "That player is not a member of your nation");
                     return true;
                 }
+
                 //check if nationsPlayer being promoted is already a leader or legate
                 if (nationsPromotedPlayer.getRank() == NationsManager.Rank.LEADER || nationsPromotedPlayer.getRank() == NationsManager.Rank.LEGATE) {
                     player.sendMessage(ChatColor.RED + "That player is already at the highest possible rank");
                     return true;
                 }
+
                 //promote nationsPlayer
                 nationsPromotedPlayer.setRank(NationsManager.Rank.LEGATE);
                 Bukkit.getPlayer(nationsPromotedPlayer.getUniqueID()).sendMessage(ChatColor.GREEN + "You have been promoted from member to legate in " + playerNation.getName());
+
                 //send message to all members
-                for (UUID uuid : playerNation.getMembers()) {
+                for (UUID uuid : playerNation.getMemberUUIDs()) {
                     Player msgPlayer = Bukkit.getPlayer(uuid);
                     if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(nationsPromotedPlayer.getUniqueID())))
                         msgPlayer.sendMessage(ChatColor.YELLOW + nationsPromotedPlayer.getName() + " has been promoted to legate");
@@ -540,21 +581,25 @@ public class nation implements Command {
                     player.sendMessage(ChatColor.RED + "You are not in a nation");
                     return true;
                 }
+
                 //check if player is the leader of their nation
                 if (nationsPlayer.getRank() != NationsManager.Rank.LEADER) {
                     player.sendMessage(ChatColor.RED + "You do not have permission to rename your nation");
                     return true;
                 }
+
                 //check if name is 2-30 characters long
                 if (fullName.length() < 2 || fullName.length() > 30) {
                     player.sendMessage(ChatColor.RED + "Nation name must be between 2 and 30 characters");
                     return true;
                 }
+
                 //check if name is already taken
                 if (nationsManager.getNationByName(fullName.toString()) != null) {
                     player.sendMessage(ChatColor.RED + "A nation with that name already exists");
                     return true;
                 }
+
                 //rename nation
                 playerNation.setName(fullName.toString());
                 player.sendMessage(ChatColor.GREEN + "Renamed your nation to \"" + playerNation.getName() + "\"");
@@ -574,43 +619,36 @@ public class nation implements Command {
                     return true;
                 }
 
-                Chunk currentChunk = player.getLocation().getChunk();
+                currentChunk = player.getLocation().getChunk();
                 //check if chunk is claimed
-                for (NationsChunk chunk : Main.nationsManager.getChunks()) {
-                    if (chunk.getX() == currentChunk.getX() && chunk.getZ() == currentChunk.getZ() && chunk.getWorldName().equals(player.getWorld().getName())) {
-                        //check if nationsPlayer's nation owns this chunk
-                        if (chunk.getNationID() == nationsPlayer.getNationID()) {
-                            //unclaim chunk
-                            Main.nationsManager.getChunks().remove(chunk);
-                            Main.nationsManager.getNationByID(nationsPlayer.getNationID()).decrementChunks();
-                            int chunkCost = (NationsManager.chunkCost * Main.nationsManager.getNationByID(nationsPlayer.getNationID()).getNumChunks()) + NationsManager.chunkCost;
-                            nationsPlayer.addMoney(chunkCost);
-                            player.sendMessage(ChatColor.GREEN + "Unclaimed this chunk from " + Main.nationsManager.getNationByID(nationsPlayer.getNationID()).getName() + ". You received $" + chunkCost);
-                            nationsPlayer.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), -1)); //update currentChunk
-
-                            //update all villagers and iron golems in the chunk
-                            for (Entity entity : currentChunk.getEntities()) {
-                                if (entity instanceof CraftVillager) {
-                                    EntityVillager villager = ((CraftVillager) entity).getHandle();
-                                    if (Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).getNationID() == nationsPlayer.getNationID()) {
-                                        Main.nationsManager.getVillagerByUUID(villager.getUniqueID()).setNationID(-1);
-                                        Main.nationsManager.getNationByID(nationsPlayer.getNationID()).decrementPopulation();
-                                    }
-                                }
-                                else if (entity instanceof CraftIronGolem) {
-                                    EntityIronGolem golem = ((CraftIronGolem) entity).getHandle();
-                                    if (Main.nationsManager.getGolemByUUID(golem.getUniqueID()).getNationID() == nationsPlayer.getNationID())
-                                        Main.nationsManager.getGolemByUUID(golem.getUniqueID()).setNationID(-1);
-                                }
-                            }
-                        }
-                        else player.sendMessage(ChatColor.RED + "Your nation does not own this chunk");
-                        return true;
-                    }
+                if (Main.nationsManager.getChunkByCoords(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld()) == null) {
+                    player.sendMessage(ChatColor.RED + "This chunk is not claimed");
+                    return true;
                 }
 
-                //when this chunk is not claimed
-                player.sendMessage(ChatColor.RED + "This chunk is not claimed");
+                //unclaim chunk
+                Main.nationsManager.removeChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld());
+                chunkCost = (playerNation.getNumChunks() * NationsManager.chunkCost);
+                nationsPlayer.addMoney(chunkCost);
+                playerNation.decrementChunks();
+                player.sendMessage(ChatColor.YELLOW + "Unclaimed this chunk from " + playerNation.getName() + " and received $" + chunkCost);
+                nationsPlayer.setCurrentChunk(new NationsChunk(currentChunk.getX(), currentChunk.getZ(), currentChunk.getWorld(), -1)); //update currentChunk
+
+                //update all villagers and iron golems in the chunk
+                for (Entity entity : currentChunk.getEntities()) {
+                    if (entity instanceof CraftVillager) {
+                        NationsVillager nationsVillager = nationsManager.getVillagerByUUID(entity.getUniqueId());
+                        if (nationsVillager != null) {
+                            nationsVillager.setNationID(-1);
+                            playerNation.decrementPopulation();
+                        }
+                    }
+                    else if (entity instanceof CraftIronGolem) {
+                        NationsIronGolem nationsIronGolem = nationsManager.getGolemByUUID(entity.getUniqueId());
+                        if (nationsIronGolem != null)
+                            nationsIronGolem.setNationID(-1);
+                    }
+                }
                 return true;
         }
         return false;
@@ -620,10 +658,12 @@ public class nation implements Command {
     public static void configMenu(Player player) {
         Nation nation = nationsManager.getNationByID(nationsManager.getPlayerByUUID(player.getUniqueId()).getNationID());
         InventoryGUI gui = new InventoryGUI(player, "Nation Settings", 1, true);
+
         //permissions button - opens rank menu
         InventoryGUIButton permsButton = new InventoryGUIButton(gui, "Manage Permissions", "Edit permissions for different ranks of your nation", Material.PLAYER_HEAD);
         permsButton.setOnClick(e -> ranksMenu(player));
         gui.addButton(permsButton);
+
         //iron golem attack button
         String golemButtonDescription = " - Toggle iron golems attacking\nplayers and villagers of enemy nations";
         InventoryGUIButton golemButton = new InventoryGUIButton(gui, "Iron Golems Attack Enemies", (nation.getConfig().getGolemsAttackEnemies() ? ChatColor.GREEN + "ENABLED" : ChatColor.RED + "DISABLED") + ChatColor.RESET + golemButtonDescription, Material.POPPY);
@@ -632,6 +672,7 @@ public class nation implements Command {
             golemButton.setDescription((nation.getConfig().getGolemsAttackEnemies() ? ChatColor.GREEN + "ENABLED" : ChatColor.RED + "DISABLED") + ChatColor.RESET + golemButtonDescription);
         });
         gui.addButton(golemButton);
+
         gui.addButtons(new InventoryGUIButton(gui, null, null, Material.WHITE_STAINED_GLASS_PANE), 7);
         gui.showMenu();
     }
@@ -669,6 +710,7 @@ public class nation implements Command {
         Nation nation = nationsManager.getNationByID(nationsManager.getPlayerByUUID(player.getUniqueId()).getNationID());
         NationsPermission perms = nation.getConfig().getPermissionByRank(rank);
         InventoryGUI gui = new InventoryGUI(player, rank + " Permissions", 1, true);
+
         //back button
         InventoryGUIButton backButton = new InventoryGUIButton(gui, "Back", null, Material.ARROW);
         backButton.setOnClick(e -> {

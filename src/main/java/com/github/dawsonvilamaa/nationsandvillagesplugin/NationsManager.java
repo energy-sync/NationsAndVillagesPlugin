@@ -1,7 +1,6 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin;
 
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.*;
-import com.github.dawsonvilamaa.nationsandvillagesplugin.exceptions.NationNotFoundException;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.gui.InventoryGUI;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsIronGolem;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
@@ -9,10 +8,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class NationsManager {
@@ -20,7 +18,7 @@ public class NationsManager {
     private HashMap<UUID, NationsVillager> villagers;
     private HashMap<UUID, NationsPlayer> players;
     private HashMap<UUID, NationsIronGolem> golems;
-    private ArrayList<NationsChunk> chunks;
+    private HashMap<ChunkCoord, NationsChunk> chunks;
     private HashMap<UUID, InventoryGUI> menus;
     private HashMap<UUID, Map.Entry<ShopItem, ScheduledThreadPoolExecutor>> playersChoosingMerchants;
 
@@ -42,7 +40,7 @@ public class NationsManager {
         this.villagers = new HashMap<>();
         this.players = new HashMap<>();
         this.golems = new HashMap<>();
-        this.chunks = new ArrayList<>();
+        this.chunks = new HashMap<>();
         this.menus = new HashMap<>();
         this.nextNationID = -1;
         this.playersChoosingMerchants = new HashMap<>();
@@ -79,7 +77,7 @@ public class NationsManager {
     /**
      * @return chunks
      */
-    public ArrayList<NationsChunk> getChunks() {
+    public HashMap<ChunkCoord, NationsChunk> getChunks() {
         return this.chunks;
     }
 
@@ -98,15 +96,14 @@ public class NationsManager {
     /**
      * Removes a nation from the worldwide list
      * @param nationID
-     * @throws NationNotFoundException
      */
     public void removeNation(int nationID) {
         //unclaim all chunks
-        for (int i = 0; i < this.chunks.size(); i++) {
-            if (this.chunks.get(i).getNationID() == nationID)
-                this.chunks.remove(this.chunks.get(i));
+        Collection<NationsChunk> chunkValues = this.chunks.values();
+        for (NationsChunk chunk : chunkValues) {
+            if (chunk.getNationID() == nationID)
+                this.chunks.remove(chunk.getChunkCoord());
         }
-        this.chunks.trimToSize();
         //remove all members
         for (NationsPlayer nationsPlayer : this.players.values()) {
             if (nationsPlayer.getNationID() == nationID) {
@@ -233,11 +230,29 @@ public class NationsManager {
     /**
      * Adds a claimed chunk to the worldwide list, saving its coordinates and the ID of the owning nation
      * @param x
-     * @param y
+     * @param z
      * @param nationID
      */
-    public void addChunk(int x, int y, World world, int nationID) {
-        this.chunks.add(new NationsChunk(x, y, world, nationID));
+    public void addChunk(int x, int z, World world, int nationID) {
+        this.chunks.put(new ChunkCoord(x, z, world.getName()), new NationsChunk(x, z, world, nationID));
+    }
+
+    /**
+     * Adds a claimed chunk to the worldwide list, saving its coordinates and the ID of the owning nation
+     * @param nationsChunk
+     */
+    public void addChunk(NationsChunk nationsChunk) {
+        this.chunks.put(new ChunkCoord(nationsChunk.getX(), nationsChunk.getZ(), nationsChunk.getWorld().getName()), nationsChunk);
+    }
+
+    /**
+     * Removes a chunk from the worldwide list
+     * @param x
+     * @param z
+     * @param world
+     */
+    public void removeChunk(int x, int z, World world) {
+        this.chunks.remove(new ChunkCoord(x, z, world.getName()));
     }
 
     /**
@@ -247,10 +262,7 @@ public class NationsManager {
      * @return chunk
      */
     public NationsChunk getChunkByCoords(int x, int z, World world) {
-        for (NationsChunk chunk : this.chunks) {
-            if (chunk.getX() == x && chunk.getZ() == z && chunk.getWorld().equals(world)) return chunk;
-        }
-        return null;
+        return this.chunks.get(new ChunkCoord(x, z, world.getName()));
     }
 
     //Menus

@@ -6,6 +6,7 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.Nation;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsChunk;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.classes.NationsPlayer;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.commands.nation;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
@@ -39,8 +40,7 @@ public class PlayerListener implements Listener {
             nationsPlayer = Main.nationsManager.addPlayer(e.getPlayer());
             e.getPlayer().sendMessage(ChatColor.GREEN + "You received $" + Main.nationsManager.startingMoney + " for being a new player");
         }
-        nationsPlayer.setAutoClaim(false);
-        nationsPlayer.setAutoUnclaim(false);
+        nationsPlayer.setAutoClaimMode(NationsPlayer.AUTOCLAIM_MODE.NONE);
         //check if username changed
         if (!(nationsPlayer.getName().equals(e.getPlayer().getName())))
             nationsPlayer.setName(e.getPlayer().getName());
@@ -61,8 +61,7 @@ public class PlayerListener implements Listener {
                     e.getPlayer().sendTitle(ChatColor.YELLOW + Main.nationsManager.getNationByID(nationsChunk.getNationID()).getName(),ChatColor.GREEN + "Entering", 3, 50, 3);
                 }
                 //autounclaim
-                if (player.isAutoUnclaiming() && player.getNationID() == nationsChunk.getNationID())
-                    //unclaim.run(e.getPlayer(), new String[0]);
+                if (player.getAutoClaimMode() == NationsPlayer.AUTOCLAIM_MODE.AUTOUNCLAIM && player.getNationID() == nationsChunk.getNationID())
                     nation.run(e.getPlayer(), new String[] {"unclaim"});
             }
             else {
@@ -75,9 +74,8 @@ public class PlayerListener implements Listener {
                 player.setCurrentChunk(new NationsChunk(chunk.getX(), chunk.getZ(), chunk.getWorld(), -1));
                 player.setCurrentChunk(new NationsChunk(chunk.getX(), chunk.getZ(), chunk.getWorld(), -1));
                 //autoclaim
-                if (player.isAutoClaiming())
+                if (player.getAutoClaimMode() == NationsPlayer.AUTOCLAIM_MODE.AUTOCLAIM)
                     nation.run(e.getPlayer(), new String[] {"claim"});
-                    //claim.run(e.getPlayer(), new String[0]);
             }
         }
     }
@@ -94,7 +92,7 @@ public class PlayerListener implements Listener {
         //check if player is inside a claimed chunk
         if (nationsChunk != null) {
             Nation nation = Main.nationsManager.getNationByID(nationsChunk.getNationID());
-            boolean canPlaceBlocks = true;
+            boolean canPlaceBlocks;
             //check player's permissions if they are in their own nation
             if (player.getNationID() == nationsChunk.getNationID())
                 canPlaceBlocks = nation.getConfig().getPermissionByRank(player.getRank()).canModifyBlocks();
@@ -250,7 +248,7 @@ public class PlayerListener implements Listener {
     //checks if player is allowed to attack non-hostile enemies
     @EventHandler
     public void onAttackEntity(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof CraftPlayer && !(e.getEntity() instanceof Monster || e.getEntity() instanceof CraftGhast || e.getEntity() instanceof CraftHoglin || e.getEntity() instanceof CraftMagmaCube || e.getEntity() instanceof CraftPhantom || e.getEntity() instanceof CraftShulker || e.getEntity() instanceof CraftSlime || e.getEntity() instanceof CraftEnderDragon || e.getEntity() instanceof CraftVillager)) {
+        if (e.getDamager() instanceof CraftPlayer && !(e.getEntity() instanceof Monster || e.getEntity() instanceof CraftGhast || e.getEntity() instanceof CraftHoglin || e.getEntity() instanceof CraftMagmaCube || e.getEntity() instanceof CraftPhantom || e.getEntity() instanceof CraftShulker || e.getEntity() instanceof CraftSlime || e.getEntity() instanceof CraftEnderDragon || e.getEntity() instanceof CraftVillager || e.getEntity() instanceof CraftIronGolem)) {
             Chunk chunk = e.getEntity().getLocation().getChunk();
             NationsPlayer player = Main.nationsManager.getPlayerByUUID(e.getDamager().getUniqueId());
             NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ(), chunk.getWorld());

@@ -79,10 +79,7 @@ public class Shop {
         for (int i = 0; i < this.items.size(); i++) {
             if (this.items.get(i) != null) {
                 ItemStack item = this.items.get(i).getItem().clone();
-                if (item.getType() == removedShopItem.getMaterial()
-                        && item.getAmount() == removedShopItem.getAmount()
-                        && item.getItemMeta().getDisplayName().equals(removedShopItem.getItem().getItemMeta().getDisplayName())
-                        && item.getEnchantments().equals(removedShopItem.getItem().getEnchantments())) {
+                if (item.getType() == removedShopItem.getMaterial() && item.getAmount() == removedShopItem.getAmount() && item.getItemMeta().getDisplayName().equals(removedShopItem.getItem().getItemMeta().getDisplayName()) && item.getEnchantments().equals(removedShopItem.getItem().getEnchantments())) {
                     this.items.remove(i);
                     return item;
                 }

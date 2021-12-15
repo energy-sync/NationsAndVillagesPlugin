@@ -10,7 +10,6 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Lumberjack;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.Merchant;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import net.minecraft.server.v1_16_R3.EntityVillager;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -26,7 +25,6 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 
 import java.util.Random;
 
@@ -50,19 +48,7 @@ public class NationsVillagerListener implements Listener {
             NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId());
 
             EntityType damagerEntityType = e.getDamager().getType();
-            if (Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId()).getJob() == NationsVillager.Job.GUARD) {
-                boolean retaliate = false;
-                for (EntityType entityType : Guard.HOSTILE_MOBS) {
-                    if (damagerEntityType == entityType) {
-                        retaliate = true;
-                        break;
-                    }
-                }
-                if (!retaliate && (damagerEntityType == EntityType.PLAYER || damagerEntityType == EntityType.IRON_GOLEM)) {
-
-                }
-            }
-            else if (random.nextBoolean()) {
+            if (random.nextBoolean() && Main.nationsManager.getVillagerByUUID(e.getEntity().getUniqueId()).getJob() != NationsVillager.Job.GUARD) {
                 //shout for help if attacked by a player or zombie
                 if (e.getDamager() instanceof CraftPlayer)
                     nationsVillager.speakToPlayer((CraftPlayer) e.getDamager(), playerAttackMessages[random.nextInt(playerAttackMessages.length)]);
@@ -84,7 +70,6 @@ public class NationsVillagerListener implements Listener {
         }
     }
 
-    //renames villager if renamed with name tag, or does click event otherwise
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent e) {
         if (e.getRightClicked() instanceof CraftVillager) {
@@ -159,7 +144,7 @@ public class NationsVillagerListener implements Listener {
         }
     }
 
-    //drops all items if villager is a merchant
+    //drops all items if villager is a merchant, lumberjack, or guard
     @EventHandler
     public void onDeath(EntityDeathEvent e) {
         Entity entity = e.getEntity();
@@ -167,6 +152,7 @@ public class NationsVillagerListener implements Listener {
             EntityVillager villager = ((CraftVillager) entity).getHandle();
             NationsVillager nationsVillager = Main.nationsManager.getVillagerByUUID(villager.getUniqueID());
             nationsVillager.stopRunnable();
+            endJob(nationsVillager);
             if (nationsVillager instanceof Merchant) {
                 for (ShopItem shopItem : ((Merchant) nationsVillager).getShop().getItems())
                     entity.getWorld().dropItemNaturally(entity.getLocation(), shopItem.getItem());
@@ -180,7 +166,6 @@ public class NationsVillagerListener implements Listener {
             }
             else if (nationsVillager instanceof Guard) {
                 Guard guard = (Guard) nationsVillager;
-                guard.stopJob();
 
                 //skeletons and strays still attack the location of the guard after it dies, so manually set attack targets to null
                 for (Entity enemyEntity : e.getEntity().getNearbyEntities(NationsVillager.ENEMY_DETECTION_RANGE, NationsVillager.ENEMY_DETECTION_RANGE, NationsVillager.ENEMY_DETECTION_RANGE)) {

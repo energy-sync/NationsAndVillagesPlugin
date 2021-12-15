@@ -24,7 +24,7 @@ public class sell implements Command {
             return false;
         }
         if (args[0].equals("cancel")) {
-            if (Main.nationsManager.isPlayerChoosingMerchant(sender.getUniqueId()) == false)
+            if (!Main.nationsManager.isPlayerChoosingMerchant(sender.getUniqueId()))
                 sender.sendMessage(ChatColor.RED + "You do not have a sell order pending");
             else {
                 Main.nationsManager.getPlayersChoosingMerchants().remove(sender.getUniqueId());

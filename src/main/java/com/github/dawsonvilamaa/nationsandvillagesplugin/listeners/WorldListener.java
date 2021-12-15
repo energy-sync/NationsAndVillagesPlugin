@@ -6,19 +6,14 @@ import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsIronGolem;
 import com.github.dawsonvilamaa.nationsandvillagesplugin.npcs.NationsVillager;
 import net.minecraft.server.v1_16_R3.EntityIronGolem;
 import net.minecraft.server.v1_16_R3.EntityVillager;
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftIronGolem;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Monster;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 
 public class WorldListener implements Listener {

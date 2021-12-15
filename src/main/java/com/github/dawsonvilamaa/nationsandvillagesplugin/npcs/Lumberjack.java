@@ -28,7 +28,6 @@ public class Lumberjack extends NationsVillager {
     static final int MIN_RADIUS = 4;
 
     private Inventory inventory;
-    private BukkitTask runnable;
 
     /**
      * @param uuid
@@ -40,7 +39,7 @@ public class Lumberjack extends NationsVillager {
         setNationID(nationID);
         setJob(Job.LUMBERJACK);
         this.inventory = Bukkit.createInventory((InventoryHolder) Bukkit.getEntity(getUniqueID()), 54, "Lumberjack");
-        this.runnable = null;
+        setRunnable(null);
         setOnClick(e -> {
             NationsPlayer nationsPlayer = Main.nationsManager.getPlayerByUUID(e.getPlayer().getUniqueId());
             //check if player is in same nation as villager
@@ -57,7 +56,7 @@ public class Lumberjack extends NationsVillager {
     public Lumberjack(JSONObject jsonLumberjack) {
         super(jsonLumberjack);
         this.inventory = Bukkit.createInventory((InventoryHolder) Bukkit.getEntity(getUniqueID()), 54);
-        this.runnable = null;
+        setRunnable(null);
         Iterator<JSONObject> iterator = ((JSONArray) jsonLumberjack.get("inventory")).iterator();
         while (iterator.hasNext()) {
             JSONObject jsonItem = iterator.next();
@@ -96,7 +95,7 @@ public class Lumberjack extends NationsVillager {
      * Starts the lumberjack's job of chopping down all trees within RADIUS blocks
      */
     public void startJob() {
-        this.runnable = new BukkitRunnable() {
+        setRunnable(new BukkitRunnable() {
             @Override
             public void run() {
                 Entity entity = Bukkit.getEntity(getUniqueID());
@@ -229,14 +228,14 @@ public class Lumberjack extends NationsVillager {
                     }
                 }
             }
-        }.runTaskTimer(Main.plugin, 20, 5);
+        }).runTaskTimer(Main.plugin, 20, 5);
     }
 
     /**
      * Stops the lumberjack from cutting down trees
      */
     public void stopJob() {
-        this.runnable.cancel();
+        stopRunnable();
         Entity entity = Bukkit.getEntity(getUniqueID());
         for (ItemStack item : this.inventory.getContents())
             if (item != null)

@@ -53,7 +53,7 @@ public class Merchant extends NationsVillager {
         return this.shop;
     }
 
-    //drops all of the items in the shop
+    //drops all the items in the shop
     public void stopJob() {
         Entity entity = Bukkit.getEntity(getUniqueID());
         for (ShopItem shopItem : this.shop.getItems())

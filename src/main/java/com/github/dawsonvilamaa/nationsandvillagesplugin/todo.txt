@@ -1,11 +1,7 @@
-- Prevent lumberjack from cutting down pillars of logs that do not have leaves attached (done)
-- Fix exception caused when a villager does a job when chunks are not loaded (done)
-- Add command for nations to declare each others as enemies (done)
-- Put invite and claim/unclaim commands under nation command (done)
-
-- Make guards hostile to enemy players and villagers (done)
-- Make /nation settings/config command for permission menu and iron golem attack option (done)
-- Add iron golems as guards (done)
-- Refactor villager combat (done)
-- Add colored sword and armor icons in guard nametags (done)
-- Make claim chunks per dimension (done)
+- remove enemy from other nations when nation is deleted
+- cancel invite timer when invite is accepted
+- disable nation enter/remove messages when autoclaiming or autounclaiming
+- don't let guards attack players in spectator or creative mode
+- make guards attack guards that attack them even if they are not enemies (add to temporary list)
+- autosave
+- make entities retaliate once they are attacked by iron golems (probably through events)

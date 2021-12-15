@@ -13,6 +13,7 @@ public class NationsChunk {
     /**
      * @param x
      * @param z
+     * @param world
      * @param nationID
      */
     public NationsChunk(int x, int z, World world, int nationID) {
@@ -28,6 +29,7 @@ public class NationsChunk {
     public NationsChunk(JSONObject jsonNationsChunk) {
         this.x = Integer.parseInt(jsonNationsChunk.get("x").toString());
         this.z = Integer.parseInt(jsonNationsChunk.get("z").toString());
+        this.worldName = jsonNationsChunk.get("world").toString();
         this.nationID = Integer.parseInt(jsonNationsChunk.get("nationID").toString());
     }
 
@@ -92,6 +94,14 @@ public class NationsChunk {
      */
     public void setNationID(int nationID) {
         this.nationID = nationID;
+    }
+
+    /**
+     * Returns a "coordinate" which includes the chunk's x and z coordinates as well as the world name in one object
+     * @return ChunkCoord
+     */
+    public ChunkCoord getChunkCoord() {
+        return new ChunkCoord(this.x, this.z, this.worldName);
     }
 
     /**

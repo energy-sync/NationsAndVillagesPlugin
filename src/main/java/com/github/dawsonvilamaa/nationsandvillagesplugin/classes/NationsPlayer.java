@@ -10,15 +10,20 @@ import org.json.simple.JSONObject;
 import java.util.UUID;
 
 public class NationsPlayer {
+    public final int STARTING_MONEY = 1000;
+    public enum AUTOCLAIM_MODE {
+        NONE,
+        AUTOCLAIM,
+        AUTOUNCLAIM
+    }
+
     private String username;
     private UUID uuid;
     private int money;
     private int nationID;
     private NationsManager.Rank rank;
     private NationsChunk currentChunk;
-    private boolean autoClaim;
-    private boolean autoUnclaim;
-    private UUID chosenMerchant;
+    private AUTOCLAIM_MODE autoClaimMode;
 
     /**
      * @param player
@@ -26,12 +31,11 @@ public class NationsPlayer {
     public NationsPlayer(Player player) {
         this.username = player.getName();
         this.uuid = player.getUniqueId();
-        this.money = Main.nationsManager.startingMoney;
+        this.money = STARTING_MONEY;
         this.nationID = -1;
         this.rank = NationsManager.Rank.NONMEMBER;
         this.currentChunk = new NationsChunk(-1, -1, player.getWorld(), -1);
-        this.autoClaim = false;
-        this.autoUnclaim = false;
+        this.autoClaimMode = AUTOCLAIM_MODE.NONE;;
     }
 
     /**
@@ -44,9 +48,8 @@ public class NationsPlayer {
         this.nationID = Integer.parseInt(jsonPlayer.get("nationID").toString());
         this.rank = NationsManager.Rank.valueOf(jsonPlayer.get("rank").toString());
         JSONObject jsonCurrentChunk = (JSONObject) jsonPlayer.get("currentChunk");
-        this.currentChunk = new NationsChunk(Integer.parseInt(jsonCurrentChunk.get("x").toString()), Integer.parseInt(jsonCurrentChunk.get("z").toString()), Bukkit.getWorld(jsonCurrentChunk.get("world").toString()), Integer.parseInt(jsonCurrentChunk.get("id").toString()));
-        this.autoClaim = false;
-        this.autoUnclaim = false;
+        this.currentChunk = new NationsChunk(Integer.parseInt(jsonCurrentChunk.get("x").toString()), Integer.parseInt(jsonCurrentChunk.get("z").toString()), Bukkit.getWorld(jsonCurrentChunk.get("world").toString()), Integer.parseInt(jsonCurrentChunk.get("nationID").toString()));
+        this.autoClaimMode = AUTOCLAIM_MODE.NONE;
     }
 
     /**
@@ -143,31 +146,18 @@ public class NationsPlayer {
     }
 
     /**
-     * @return autoclaim
+     * Returns if the player is autoclaiming, autounclaiming, or neither
+     * @return autoClaimMode
      */
-    public boolean isAutoClaiming() {
-        return this.autoClaim;
+    public AUTOCLAIM_MODE getAutoClaimMode() {
+        return this.autoClaimMode;
     }
 
     /**
-     * @param autoClaim
+     * @param autoClaimMode
      */
-    public void setAutoClaim(boolean autoClaim) {
-        this.autoClaim = autoClaim;
-    }
-
-    /**
-     * @return autounclaim
-     */
-    public boolean isAutoUnclaiming() {
-        return this.autoUnclaim;
-    }
-
-    /**
-     * @param autoUnclaim
-     */
-    public void setAutoUnclaim(boolean autoUnclaim) {
-        this.autoUnclaim = autoUnclaim;
+    public void setAutoClaimMode(AUTOCLAIM_MODE autoClaimMode) {
+        this.autoClaimMode = autoClaimMode;
     }
 
     public JSONObject toJSON() {
@@ -177,18 +167,10 @@ public class NationsPlayer {
         jsonNationsPlayer.put("money", String.valueOf(this.money));
         jsonNationsPlayer.put("nationID", String.valueOf(this.nationID));
         jsonNationsPlayer.put("rank", this.rank.toString());
-        JSONObject jsonCurrentChunk = new JSONObject();
-        if (this.currentChunk == null) {
-            jsonCurrentChunk.put("x", 0);
-            jsonCurrentChunk.put("z", 0);
-            jsonCurrentChunk.put("id", -1);
-        }
-        else {
-            jsonCurrentChunk.put("x", this.currentChunk.getX());
-            jsonCurrentChunk.put("z", this.currentChunk.getZ());
-            jsonCurrentChunk.put("id", this.currentChunk.getNationID());
-        }
-        jsonNationsPlayer.put("currentChunk", jsonCurrentChunk);
+        if (this.currentChunk == null)
+            jsonNationsPlayer.put("currentChunk", new NationsChunk(0, 0, Bukkit.getWorlds().get(0), -1).toJSON());
+        else
+            jsonNationsPlayer.put("currentChunk", this.currentChunk.toJSON());
         return jsonNationsPlayer;
     }
 }

@@ -1,6 +1,5 @@
 package com.github.dawsonvilamaa.nationsandvillagesplugin.gui;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemFlag;

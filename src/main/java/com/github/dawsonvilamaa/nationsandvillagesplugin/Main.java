@@ -115,7 +115,7 @@ public class Main extends JavaPlugin {
             JSONArray jsonChunks = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\chunks.json"));
             iterator = jsonChunks.iterator();
             while (iterator.hasNext())
-                nationsManager.getChunks().add(new NationsChunk(iterator.next()));
+                nationsManager.addChunk(new NationsChunk(iterator.next()));
 
             //load villagers
             JSONArray jsonVillagers = (JSONArray) parser.parse(new FileReader("plugins\\NationsAndVillages\\villagers.json"));
@@ -243,7 +243,7 @@ public class Main extends JavaPlugin {
 
         //save chunk data
         JSONArray jsonChunks = new JSONArray();
-        for (NationsChunk chunk : nationsManager.getChunks())
+        for (NationsChunk chunk : nationsManager.getChunks().values())
             jsonChunks.add(chunk.toJSON());
 
         FileWriter chunksFile = null;

@@ -16,10 +16,10 @@ import java.util.concurrent.TimeUnit;
 public class Nation {
     private String name;
     private int id;
-    private NationsPlayer owner;
+    private UUID ownerUUID;
     private ArrayList<UUID> members;
     private int population;
-    private int chunks;
+    private int numChunks;
     private NationsConfig config;
     private ArrayList<Integer> enemies;
 
@@ -32,10 +32,10 @@ public class Nation {
     public Nation(String name, Player owner, int id) {
         this.name = name;
         this.id = id;
-        this.owner = Main.nationsManager.getPlayers().get(owner.getUniqueId());
+        this.ownerUUID = owner.getUniqueId();
         this.members = new ArrayList<>();
         this.population = 0;
-        this.chunks = 0;
+        this.numChunks = 0;
         this.config = new NationsConfig();
         this.enemies = new ArrayList<>();
         this.invitedPlayers = new ArrayList<>();
@@ -44,13 +44,13 @@ public class Nation {
     public Nation(JSONObject jsonNation) {
         this.name = jsonNation.get("name").toString();
         this.id = Integer.parseInt(jsonNation.get("id").toString());
-        this.owner = Main.nationsManager.getPlayerByUUID(UUID.fromString(jsonNation.get("owner").toString()));
+        this.ownerUUID = UUID.fromString(jsonNation.get("ownerUUID").toString());
         this.members = new ArrayList<>();
         ArrayList<Object> membersArray = ((JSONArray) jsonNation.get("members"));
         for (Object member : membersArray)
             this.members.add(UUID.fromString(member.toString()));
         this.population = Integer.parseInt(jsonNation.get("population").toString());
-        this.chunks = Integer.parseInt(jsonNation.get("chunks").toString());
+        this.numChunks = Integer.parseInt(jsonNation.get("numChunks").toString());
         this.config = new NationsConfig(jsonNation);
         this.enemies = new ArrayList<>();
         ArrayList<Object> enemiesArray = ((JSONArray) jsonNation.get("enemies"));
@@ -81,23 +81,23 @@ public class Nation {
     }
 
     /**
-     * @return owner
+     * @return ownerUUID
      */
-    public NationsPlayer getOwner() {
-        return this.owner;
+    public UUID getOwnerUUID() {
+        return this.ownerUUID;
     }
 
     /**
-     * @param newOwner
+     * @param newOwnerUUID
      */
-    public void setOwner(NationsPlayer newOwner) {
-        this.owner = newOwner;
+    public void setOwnerUUID(UUID newOwnerUUID) {
+        this.ownerUUID = newOwnerUUID;
     }
 
     /**
      * @return members
      */
-    public ArrayList<UUID> getMembers() {
+    public ArrayList<UUID> getMemberUUIDs() {
         return this.members;
     }
 
@@ -161,7 +161,7 @@ public class Nation {
      * @return population
      */
     public int incrementPopulation() {
-        this.population = this.population + 1;
+        this.population++;
         return this.population;
     }
 
@@ -169,7 +169,7 @@ public class Nation {
      * @return population
      */
     public int decrementPopulation() {
-        this.population = this.population - 1;
+        this.population--;
         return this.population;
     }
 
@@ -177,15 +177,15 @@ public class Nation {
      * @return chunks
      */
     public int getNumChunks() {
-        return this.chunks;
+        return this.numChunks;
     }
 
     public void incrementChunks() {
-        this.chunks = this.chunks + 1;
+        this.numChunks++;
     }
 
     public void decrementChunks() {
-        this.chunks = this.chunks - 1;
+        this.numChunks--;
     }
 
     /**
@@ -213,30 +213,28 @@ public class Nation {
      * Adds a player to the list of invited players that can join this nation. Invite expires after 1 minute
      * @param uuid
      */
-    public void addInvitedPlayer(UUID uuid) throws InterruptedException {
+    public void addInvitedPlayer(UUID uuid) {
         this.invitedPlayers.add(uuid);
         Player player = Bukkit.getPlayer(uuid);
-        if (player != null && player.isOnline() == true)
+        if (player != null && player.isOnline() == true) {
             player.sendMessage(ChatColor.GREEN + "You have been invited to join " + this.name + "! To join, type /nation join [name]");
-        ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(1);
-        executorService.schedule(() -> {
-            invitedPlayers.remove(uuid);
-            if (player != null && Main.nationsManager.getPlayerByUUID(uuid).getNationID() == -1 && player.isOnline() == true)
-                player.sendMessage(ChatColor.RED + "Your invite has expired!");
-        }, 1, TimeUnit.MINUTES);
+            ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(1);
+            executorService.schedule(() -> {
+                invitedPlayers.remove(uuid);
+                if (Main.nationsManager.getPlayerByUUID(uuid).getNationID() == -1)
+                    player.sendMessage(ChatColor.RED + "Your invite has expired!");
+            }, 1, TimeUnit.MINUTES);
+        }
+        else player.sendMessage(ChatColor.RED + "That player is not online");
     }
 
     /**
-     * Returns whether or not a given player has a pending invite for this nation
+     * Returns whether a given player has a pending invite for this nation
      * @param uuid
      * @return
      */
     public boolean isPlayerInvited(UUID uuid) {
-        for (UUID player : this.invitedPlayers) {
-            if (player.equals(uuid))
-                return true;
-        }
-        return false;
+        return this.invitedPlayers.contains(uuid);
     }
 
     /**
@@ -247,13 +245,13 @@ public class Nation {
         JSONObject jsonNation = new JSONObject();
         jsonNation.put("name", this.name);
         jsonNation.put("id", String.valueOf(this.id));
-        jsonNation.put("owner", this.owner.getUniqueID().toString());
+        jsonNation.put("ownerUUID", this.ownerUUID.toString());
         JSONArray membersArray = new JSONArray();
         for (UUID member : this.members)
             membersArray.add(member.toString());
         jsonNation.put("members", membersArray);
         jsonNation.put("population", String.valueOf(this.population));
-        jsonNation.put("chunks", String.valueOf(this.chunks));
+        jsonNation.put("numChunks", String.valueOf(this.numChunks));
         jsonNation.put("legatePermissions", this.config.getPermissionByRank(NationsManager.Rank.LEGATE).toJSON());
         jsonNation.put("memberPermissions", this.config.getPermissionByRank(NationsManager.Rank.MEMBER).toJSON());
         jsonNation.put("nonMemberPermissions", this.config.getPermissionByRank(NationsManager.Rank.NONMEMBER).toJSON());

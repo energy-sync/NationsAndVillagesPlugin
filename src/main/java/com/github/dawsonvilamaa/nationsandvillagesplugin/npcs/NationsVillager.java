@@ -10,6 +10,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
@@ -113,6 +114,14 @@ public class NationsVillager {
      */
     public void setJob(Job job) {
         this.job = job;
+    }
+
+    /**
+     * @param runnable
+     */
+    public BukkitRunnable setRunnable(BukkitRunnable runnable) {
+        this.runnable = (BukkitTask) runnable;
+        return (BukkitRunnable) this.runnable;
     }
 
     /**
