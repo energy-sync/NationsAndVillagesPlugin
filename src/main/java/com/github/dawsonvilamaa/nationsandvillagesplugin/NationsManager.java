@@ -8,9 +8,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class NationsManager {
@@ -115,6 +116,11 @@ public class NationsManager {
         for (NationsVillager nationsVillager : this.villagers.values()) {
             if (nationsVillager.getNationID() == nationID)
                 nationsVillager.setNationID(-1);
+        }
+        //remove enemy from other nations
+        for (Nation nation : this.nations.values()) {
+            if (nation.getID() != nationID && nation.isEnemy(nationID))
+                nation.removeEnemy(nationID);
         }
         this.nations.remove(nationID);
     }

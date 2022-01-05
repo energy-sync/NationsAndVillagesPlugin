@@ -56,7 +56,7 @@ public class PlayerListener implements Listener {
             NationsChunk nationsChunk = Main.nationsManager.getChunkByCoords(chunk.getX(), chunk.getZ(), chunk.getWorld());
             if (nationsChunk != null) {
                 //entering claimed land
-                if (player.getCurrentChunk().getNationID() != nationsChunk.getNationID()) {
+                if (player.getCurrentChunk().getNationID() != nationsChunk.getNationID() && player.getAutoClaimMode() == NationsPlayer.AUTOCLAIM_MODE.NONE) {
                     player.setCurrentChunk(new NationsChunk(chunk.getX(), chunk.getZ(), chunk.getWorld(), nationsChunk.getNationID()));
                     e.getPlayer().sendTitle(ChatColor.YELLOW + Main.nationsManager.getNationByID(nationsChunk.getNationID()).getName(),ChatColor.GREEN + "Entering", 3, 50, 3);
                 }
@@ -68,7 +68,7 @@ public class PlayerListener implements Listener {
                 //entering unclaimed land
                 if (player.getCurrentChunk().getNationID() != -1){
                     Nation chunkNation = Main.nationsManager.getNationByID(player.getCurrentChunk().getNationID());
-                    if (chunkNation != null)
+                    if (chunkNation != null && player.getAutoClaimMode() == NationsPlayer.AUTOCLAIM_MODE.NONE)
                         e.getPlayer().sendTitle(ChatColor.YELLOW + chunkNation.getName(), ChatColor.RED + "Leaving", 3, 50, 3);
                 }
                 player.setCurrentChunk(new NationsChunk(chunk.getX(), chunk.getZ(), chunk.getWorld(), -1));

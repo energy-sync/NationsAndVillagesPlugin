@@ -216,7 +216,7 @@ public class Nation {
     public void addInvitedPlayer(UUID uuid) {
         this.invitedPlayers.add(uuid);
         Player player = Bukkit.getPlayer(uuid);
-        if (player != null && player.isOnline() == true) {
+        if (player != null && player.isOnline()) {
             player.sendMessage(ChatColor.GREEN + "You have been invited to join " + this.name + "! To join, type /nation join [name]");
             ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(1);
             executorService.schedule(() -> {
@@ -226,6 +226,14 @@ public class Nation {
             }, 1, TimeUnit.MINUTES);
         }
         else player.sendMessage(ChatColor.RED + "That player is not online");
+    }
+
+    /**
+     * Removes a player from the list of invited players
+     * @param uuid
+     */
+    public void removeInvitedPlayer(UUID uuid) {
+        this.invitedPlayers.remove(uuid);
     }
 
     /**

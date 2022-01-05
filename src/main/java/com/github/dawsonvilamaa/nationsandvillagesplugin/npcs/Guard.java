@@ -280,8 +280,11 @@ public class Guard extends NationsVillager {
                 isEnemy = true;
 
             //player
-            else if (entity.getType() == EntityType.PLAYER && villagerNation.isEnemy(Main.nationsManager.getPlayerByUUID(entity.getUniqueId()).getNationID()))
-                isEnemy = true;
+            else if (entity.getType() == EntityType.PLAYER) {
+                Player player = (Player) entity;
+                if ((player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE) && villagerNation.isEnemy(Main.nationsManager.getPlayerByUUID(entity.getUniqueId()).getNationID()))
+                    isEnemy = true;
+            }
 
             //hostile mobs
             else {

@@ -16,6 +16,7 @@ import org.bukkit.craftbukkit.v1_16_R3.entity.CraftVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -37,6 +38,13 @@ public class Main extends JavaPlugin {
     public static Main plugin;
     public static NationsManager nationsManager;
     public PluginManager pm = getServer().getPluginManager();
+
+    private BukkitRunnable autoSave = new BukkitRunnable() {
+        @Override
+        public void run() {
+            saveData();
+        }
+    };
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
@@ -94,7 +102,20 @@ public class Main extends JavaPlugin {
             e.printStackTrace();
         }
 
-        //load data
+        loadData();
+
+        //turn on autosave
+        this.autoSave.runTaskTimer(this, 6000, 6000);
+    }
+
+    @Override
+    public void onDisable() {
+        this.autoSave.cancel();
+        saveData();
+    }
+
+    public void loadData() {
+
         JSONParser parser = new JSONParser();
         try {
             //load players
@@ -126,15 +147,15 @@ public class Main extends JavaPlugin {
                 switch (NationsVillager.Job.valueOf(jsonVillager.get("job").toString())) {
                     case MERCHANT:
                         nationsVillager = new Merchant(jsonVillager);
-                    break;
+                        break;
 
                     case LUMBERJACK:
                         nationsVillager = new Lumberjack(jsonVillager);
-                    break;
+                        break;
 
                     case GUARD:
                         nationsVillager = new Guard(jsonVillager);
-                    break;
+                        break;
 
                     default:
                         nationsVillager = new NationsVillager(jsonVillager);
@@ -179,9 +200,7 @@ public class Main extends JavaPlugin {
         }
     }
 
-    @Override
-    public void onDisable() {
-        //save player data
+    public void saveData() {
         JSONArray jsonPlayers = new JSONArray();
         for (NationsPlayer player : nationsManager.getPlayers().values())
             jsonPlayers.add(player.toJSON());

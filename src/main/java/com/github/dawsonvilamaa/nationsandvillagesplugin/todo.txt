@@ -1,7 +1,10 @@
-- remove enemy from other nations when nation is deleted
-- cancel invite timer when invite is accepted
-- disable nation enter/remove messages when autoclaiming or autounclaiming
-- don't let guards attack players in spectator or creative mode
+- remove enemy from other nations when nation is deleted (done)
+- cancel invite timer when invite is accepted (done)
+- disable nation enter/remove messages when autoclaiming or autounclaiming (done)
+- don't let guards attack players in spectator or creative mode (done)
 - make guards attack guards that attack them even if they are not enemies (add to temporary list)
-- autosave
+- autosave (done)
 - make entities retaliate once they are attacked by iron golems (probably through events)
+- adjust knockback done by guards depending on what armor the enemy has
+- add fill subcommand to /nation claim that fills any land inside a loop
+- add trade with money menu to villagers with jobs

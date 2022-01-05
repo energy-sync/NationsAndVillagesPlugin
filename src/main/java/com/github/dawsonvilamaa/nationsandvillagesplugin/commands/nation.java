@@ -478,6 +478,10 @@ public class nation implements Command {
                     if (msgPlayer != null && !(msgPlayer.getUniqueId().equals(player.getUniqueId())))
                         msgPlayer.sendMessage(ChatColor.GREEN + nationsPlayer.getName() + " has joined " + argNation.getName());
                 }
+
+                //remove invite
+                argNation.removeInvitedPlayer(player.getUniqueId());
+
                 return true;
 
             case "leave":
